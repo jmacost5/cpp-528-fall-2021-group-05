@@ -93,11 +93,12 @@ d <- dplyr::select( d, tractid,
              mhmval00, mhmval12, 
              hinc00, 
              hu00, vac00, own00, rent00, h30old00,
-             empclf00, clf00, unemp00, prof00,  
+             empclf00, clf00, clf12, unemp00,unemp12, prof00,  
              dpov00, npov00,
              ag25up00, hs00, col00, 
-             pop00.x, nhwht00, nhblk00, hisp00, asian00, empclf12,vac12, hinc12,hu12,
-             cbsa, prof12, cbsaname )
+             pop00.x, nhwht00, nhblk00, hisp00, asian00, empclf12, vac10, hinc12,hu12,
+             h30old00, h30old12,rent10,
+             cbsa, prof12, cbsaname ) %>% na.omit()
 
 
 d <- 
@@ -111,10 +112,16 @@ d <-
           p.prof00 = 100 * prof00 / empclf00,
           p.prof10 = 100 * prof12/empclf12,
           p.unemp = 100 * unemp00 / clf00,
+          p.unemp10 = 100 * unemp12/clf12,
           p.vacant = 100 * vac00 / hu00,
-          p.vacant10 = 100 * vac12/hu12,
+          p.vacant10 = 100 * vac10/hu12,
           mhv.change.00.to.10 = mhmval12 - mhmval00,
           p.mhv.change = 100 * (mhmval12 - mhmval00) / mhmval00,
+          p.income.change = 100 * (hinc12 - hinc00)/hinc00,
+          p.30year.change = 100 * (h30old12 - h30old00)/h30old00,
+          p.prof.change = 100 * (prof12 - prof00)/prof00,
+          p.rent = 100 * rent00/hu00,
+          p.rent10 = 100 * rent10/hu12,
           pov.rate = 100 * npov00 / dpov00 )
 
 
@@ -144,35 +151,146 @@ d$mhv.10 <- mhv.10
 d$mhv.change <- mhv.change
 d$mhv.growth <- mhv.growth 
 
-# change in professional employees
-
-pprof.00 <- d$p.prof00
-pprof.10 <- d$p.prof10
-pprof.change <- pprof.10 - pprof.00
-pct.pprof.change <- (pprof.change/pprof.00)
-d$pprof.change <- pprof.change
-d$pprof.growth <- pct.pprof.change
+```
 
 
-#Change in Vacancy 
-vacant.00 <- d$p.vacant
-vacant.10 <- d$p.vacant10
-vacant.change <- vacant.10 - vacant.00
-pct.vacant.change <- (vacant.change/vacant.00)
-d$vacant.growth <- pct.vacant.change
+
+```{r}
+#Variable Exploration: create subset to visualize in correlation matrix
+
+d2 <- select(d, mhv.growth, p.vacant, hinc00, h30old00, p.unemp, p.prof00, p.col, p.rent) #pov.rate, p.unemp)
+
+#reduce data density for visualization
+
+set.seed(1234)
+
+d3 <- sample_n(d2, 10000) %>% na.omit()
+
+#correlation plots
+
+pairs(d3, upper.panel = panel.cor, lower.panel = panel.smooth)
+```
+
+```{r}
+#Professional Employee and Household Income
+
+prof.00 <- d$p.prof00
+prof.10 <- d$p.prof10
+prof.change <- prof.10 - prof.00
+p.prof.change <- prof.change/prof.00
+p.prof.growth <- log10(p.prof.change +1)
+d$prof.change <- prof.change
+d$prof.growth <- p.prof.growth
+
+hinc.00 <- d$hinc00 * 1.28855
+hinc.10 <- d$hinc12
+hinc.change <- hinc.10 - hinc.00
+p.hinc.change <- hinc.change/hinc.00
+p.hinc.growth <- log10(p.hinc.change +1)
+
+d$hinc.change <- p.hinc.change
+d$hinc.growth <- p.hinc.growth
+
+
+cor( hinc.00, prof.00, use="pairwise.complete" )
+log.p.hinc.00 <- log10( hinc.00 + 1 )
+log.p.prof.00 <- log10( prof.00 + 1 )
+cor( log.p.hinc.00, log.p.prof.00, use="pairwise.complete" )
 
 
 ```
+
+```{r}
+
+#% Unemployed and % Renting
+
+rent.00 <- d$p.rent
+rent.10 <- d$p.rent10
+rent.change <- rent.10 - rent.00
+p.rent.change <- rent.change/rent.00
+p.rent.growth <- log10(p.rent.change +1)
+
+d$rent.change <- p.rent.change
+d$rent.growth <- p.rent.growth
+
+unemp.00 <- d$p.unemp
+unemp.10 <- d$p.unemp10
+unemp.change <- unemp.10 - unemp.00
+p.unemp.change <- unemp.change/unemp.00
+p.unemp.growth <- log10(p.unemp.change +1)
+
+d$unemp.change<- p.unemp.change
+d$unemp.growth  <- p.unemp.growth
+
+
+cor( rent.00, unemp.00, use="pairwise.complete" )
+log.p.rent <- log10( rent.00 + 1 )
+log.p.unemp <- log10( unemp.00 + 1 )
+cor( log.p.rent, log.p.unemp, use="pairwise.complete" )
+
+```
+
+
+```{r}
+#Vacancy Rate 
+vacant.00 <- d$p.vacant
+vacant.10 <- d$p.vacant10
+p.vacant.change <- (vacant.10 - vacant.00)/vacant.00
+d$vacant.change <- p.vacant.change
+```
+
 
 # create mini data frame
 ```{r}
 df <- data.frame( MedianHomeValue2000=mhv.00, 
                   MedianHomeValue2010=mhv.10, 
                   MHV.Change.00.to.10=mhv.change,
-                  MHV.Growth.00.to.12=mhv.growth)
+                  MHV.Growth.00.to.12=mhv.growth,
+                  Vacant2000 = vacant.00,
+                  Vacant2010 = vacant.10,
+                  Vacancyrate = p.vacant.change,
+                  Unemp2000 = unemp.00,
+                  Unemp2010 = unemp.10,
+                  Unemp.change = p.unemp.change,
+                  Unemp.growth = p.unemp.growth,
+                  Rent2000 = rent.00,
+                  Rent2010 = rent.10,
+                  Rent.change = p.rent.change,
+                  Rent.growth = p.rent.growth,
+                  Income2000 = hinc.00,
+                  Income2010 = hinc.10,
+                  Income.change = p.hinc.change,
+                  Income.growth = p.hinc.growth,
+                  Prof2000 = prof.00,
+                  Prof2010 = prof.10,
+                  Prof.change = p.prof.change,
+                  Prof.growth = p.prof.growth)
                   
 ```
 
+## Measurement Variables
+
+
+```{r}
+#Household Income and Professional Employee Change
+measurement.1 <- select(df, Prof.growth, Income.growth) %>% na.omit ()
+
+measurement.2 <- select(df, Rent.growth, Unemp.growth) %>% na.omit()
+
+measurement.3 <- df$Vacancyrate %>% na.omit()
+```
+
+
+```{r}
+set.seed(1234)
+pairs(measurement.1, lower.panel = panel.smooth, upper.panel = panel.cor)
+```
+
+
+```{r}
+set.seed(1234)
+pairs(measurement.2, lower.panel = panel.smooth, upper.panel = panel.cor)
+```
 
 
 ## Median Home Value
@@ -225,11 +343,6 @@ text( x=200, y=2000,
 ```
 
 
-```{r}
-
-```
-
-
 ### Percent Change in Median Home Value 2000 to 2010
 
 ```{r}
@@ -258,23 +371,8 @@ text( x=100, y=(0.6*ymax),
 ## Metro Level Statistics
 
 ```{r}
-
-```
-
-```{r}
 cbsa_stats_df %>% head()
 ```
-
-
-
-## Modeling
-```{r}
-
-```
-
-
-### Choosing Variables
-
 
 
 #### Metro Demographics
@@ -282,116 +380,159 @@ cbsa_stats_df %>% head()
 **Professional Employee**
 ```{r}
 par( mfrow=c(2,2) )
-hist( d$p.prof00, breaks=150, col="gray20", border="white", 
+hist( df$Prof2000, breaks=150, col="gray20", border="white", 
       yaxt="n", xlab="xlabel", ylab="", main="Percent of Professional Employees 2000",)
-hist( log(d$p.prof00+1), breaks=150, col="gray20", border="white",
+hist( log(df$Prof2000+1), breaks=150, col="gray20", border="white",
       yaxt="n", xlab="", ylab="", main="Percent of Professional Employees 2000 (logged)")
-hist( d$p.prof10, breaks=150, col="gray20", border="white", 
+hist( df$Prof2010, breaks=150, col="gray20", border="white", 
       yaxt="n", xlab="xlabel", ylab="", main="Percent of Professional Employees 2010",)
-hist( log(d$p.prof10+1), breaks=150, col="gray20", border="white",
+hist( log(df$Prof2010+1), breaks=150, col="gray20", border="white",
       yaxt="n", xlab="", ylab="", main="Percent of Professional Employees 2010 (logged)")
 ```
 
 ```{r}
 par( mfrow=c(1,2) )
-hist( d$pprof.growth, breaks= 50, col="gray20", border="white", xlim=c(-10,25),
+hist( df$Prof.change, breaks= 150, col="gray20", border="white", xlim=c(-100,250),
       yaxt="n", xlab="xlabel", ylab="", main="Percent of Professional Employees Change 2000 to 2010",)
-hist( log(d$pprof.growth + 1), breaks=50, col="gray20", border="white",xlim=c(-3,5),
+hist( log(df$Prof.change + 1), breaks=150, col="gray20", border="white",xlim=c(-2,2),
       yaxt="n", xlab="", ylab="", main="Percent of Professional Employees Change 2000 to 2010(logged)")
+```
+
+**Rent**
+
+```{r}
+par( mfrow=c(2,2) )
+hist( df$Rent2000, breaks=150, col="gray20", border="white", 
+      yaxt="n", xlab="xlabel", ylab="", main="Percent of Rental Homes 2000",)
+hist( log(df$Rent2000+1), breaks=150, col="gray20", border="white",
+      yaxt="n", xlab="", ylab="", main="Percent of Rental Homes 2000 (logged)")
+hist( df$Rent2010, breaks=150, col="gray20", border="white", 
+      yaxt="n", xlab="xlabel", ylab="", main="Percent of Rental Homes 2010",)
+hist( log(df$Rent2010 +1), breaks=150, col="gray20", border="white",
+      yaxt="n", xlab="", ylab="", main="Percent of Rental Homes 2010 (logged)")
 ```
 
 
 
+```{r}
+#Rental Home Changes
 
-
-
+par( mfrow=c(1,2) )
+hist( df$Rent.change, breaks= 150, col="gray20", border="white", xlim=c(-100,250),
+      yaxt="n", xlab="xlabel", ylab="", main="Percent of Rental Homes from 2000 to 2010",)
+hist( log(df$Rent.change + 1), breaks=150, col="gray20", border="white",xlim=c(-2,2),
+      yaxt="n", xlab="", ylab="", main="Percent of Rental Homes from 2000 to 2010(logged)")
+```
 
 
 **Vacancy Rate**
 
 ```{r}
+#Vacancy Rate 2000 and 2010
 par( mfrow=c(2,2) )
-hist( d$p.vacant, breaks=50, col="gray20", border="white",
-      yaxt="n", xlab="", ylab="", main="Percent Vacant 2000")
-hist( log(d$p.vacant+1), breaks=50, col="gray20", border="white",
-      yaxt="n", xlab="", ylab="", main="Percent Vacant 2000 (logged)")
-hist( d$p.vacant10, breaks=50, col="gray20", border="white",
-      yaxt="n", xlab="", ylab="", main="Percent Vacant 2010")
-hist( log(d$p.vacant10+1), breaks=50, col="gray20", border="white",
-      yaxt="n", xlab="", ylab="", main="Percent Vacant 2010 (logged)")
+hist( df$Vacant2000, breaks=150, col="gray20", border="white", 
+      yaxt="n", xlab="xlabel", ylab="", main="Percent of Vacancy 2000",)
+hist( log(df$Vacant2000+1), breaks=150, col="gray20", border="white",
+      yaxt="n", xlab="", ylab="", main="Percent of Vacancy 2000 (logged)")
+hist( df$Vacant2010, breaks=150, col="gray20", border="white", 
+      yaxt="n", xlab="xlabel", ylab="", main="Percent of Vacancy 2010",)
+hist( log(df$Vacant2010 +1), breaks=150, col="gray20", border="white",
+      yaxt="n", xlab="", ylab="", main="Percent of Vacancy 2010 (logged)")
 ```
 
+
+
+
 ```{r}
+#Vacancy Change
+
 par( mfrow=c(1,2) )
-hist( d$vacant.growth, breaks=50, col="gray20", border="white",
-      yaxt="n", xlab="", ylab="", main="Percent Vacant Change 2000 to 2010")
-hist( log(d$vacant.growth+1), breaks=50, col="gray20", border="white",
-      yaxt="n", xlab="", ylab="", main="Percent Vacant Change 2000 to 2010 (logged)")
+hist( df$Vacancyrate, breaks= 150, col="gray20", border="white",
+      yaxt="n", xlab="xlabel", ylab="", main="Percent of Vacancy from 2000 to 2010",)
+hist( log(df$Vacancyrate + 1), breaks=150, col="gray20", border="white",
+      yaxt="n", xlab="", ylab="", main="Percent of Vacancy from 2000 to 2010(logged)")
+
+
 ```
 
 
-
-
-
-
-**Professional Employee and Vacant Rate**
+**Unemployment Rate**
 
 ```{r}
-log.p.vacant <- log10( d$p.vacant + 1 )
-log.profempl <- log10( d$p.prof00 + 1 )
-these <- sample( 1:length(log.profempl), 5000 )
+#Unemployment Rate 2000 and 2010
+par( mfrow=c(2,2) )
+hist( df$Unemp2000, breaks=150, col="gray20", border="white", 
+      yaxt="n", xlab="xlabel", ylab="", main="Percent of Unemployment 2000",)
+hist( log(df$Unemp2000+1), breaks=150, col="gray20", border="white",
+      yaxt="n", xlab="", ylab="", main="Percent of Unemployment 2000 (logged)")
+hist( df$Unemp2010, breaks=150, col="gray20", border="white", 
+      yaxt="n", xlab="xlabel", ylab="", main="Percent of Unemployment 2010",)
+hist( log(df$Unemp2010 +1), breaks=150, col="gray20", border="white",
+      yaxt="n", xlab="", ylab="", main="Percent of Unemployment 2010 (logged)")
+```
+
+
+```{r}
+#Unemployment Change
+
 par( mfrow=c(1,2) )
-jplot( d$p.prof00[these], d$p.vacant[these], 
-       lab1="Professional Employee", lab2="Vacant Homes (percent)",
-       main="Raw Measures" )
-jplot( log.profempl[these], log.p.vacant[these], 
-       lab1="Professional Employee", lab2="Vacant Homes (percent)",
-       main="Log Transformed" )
+hist( df$Unemp.change, breaks= 150, col="gray20", border="white",
+      yaxt="n", xlab="xlabel", ylab="", main="Percent of Unemployment Change from 2000 to 2010",)
+hist( log(df$Unemp.change + 1), breaks=150, col="gray20", border="white",
+      yaxt="n", xlab="", ylab="", main="Percent of Unemployment Change from 2000 to 2010(logged)")
 ```
 
 
-**Correlation Vacancy Rate and Poverty Rate**
+**Household Income**
 
 ```{r}
-cor( d$p.vacant, d$p.prof00, use="pairwise.complete" )
-cor( log.p.vacant, log.profempl, use="pairwise.complete" )
+#Household Income 2000 and 2010
+par( mfrow=c(2,2) )
+hist( df$Income2000, breaks=150, col="gray20", border="white", 
+      yaxt="n", xlab="xlabel", ylab="", main="Percent of Household Income 2000",)
+hist( log(df$Income2000 +1), breaks=150, col="gray20", border="white",
+      yaxt="n", xlab="", ylab="", main="Percent of Household Income 2000 (logged)")
+hist( df$Income2010, breaks=150, col="gray20", border="white", 
+      yaxt="n", xlab="xlabel", ylab="", main="Percent of Household Income 2010",)
+hist( log(df$Income2010 +1), breaks=150, col="gray20", border="white",
+      yaxt="n", xlab="", ylab="", main="Percent of Household Income 2010 (logged)")
 ```
 
 
-## Including Plots
+```{r}
+#Household Income Change
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-
-#create subset to visualize in correlatin matrix
-
-d2 <- select(d, mhv.growth, p.vacant, d$p.prof.00) #pov.rate, p.unemp)
-
-#reduce data density for visualizaiton
-
-set.seed(1234)
-
-d3 <- sample_n(d2, 10000) %>% na.omit()
-
-#correlation plots
-
-pairs(d3, upper.panel = panel.cor, lower.panel = panel.smooth)
-
+par( mfrow=c(1,2) )
+hist( df$Income.change, breaks= 150, col="gray20", border="white",
+      yaxt="n", xlab="xlabel", ylab="", main="Percent of Household Income Change from 2000 to 2010",)
+hist( log(df$Income.change + 1), breaks=150, col="gray20", border="white",
+      yaxt="n", xlab="", ylab="", main="Percent of Household Income Change from 2000 to 2010(logged)")
 ```
+
+
+**Unemployee and Rental Homes**
+
+
+```{r}
+#these <- sample(1:length(df$Unemp.growth), 5000)
+#par(mfrow = c(1,2))
+#jplot(df$Unemp2000[these], df$Rent.2000[these],
+#      lab1 = "Unemployed 2000", lab2 = "Rental Homes 2000 (percent)",
+#      main = "Raw Measures")
+#jplot(df$Unemp.growth[these], df$Rent.growth[these],
+#      lab1 = "Unemployed Growth (logged)", lab2 = "Rental Homes (percent)",
+#      main = "Log Transformed")
+```
+
 
 **Log transformations**
 
 
 ```{r logtransformation, echo=FALSE}
 set.seed( 1234 )
-d2 <- select( d, mhv.growth, p.vacant, p.prof,  pov.rate, p.unemp )
+d2 <- select( df, MHV.Growth.00.to.12, Vacancyrate, Prof.growth, Unemp.growth, Rent.growth, Income.growth )
 # recode some vars to remove outliers and skew
-d2$mhv.growth[ d2$mhv.growth > 200 ] <- NA
-d2$p.unemp <- log10( d2$p.unemp + 1 )
-d2$p.vacant <- log10( d2$p.vacant + 1 )
-d2$p.prof <- log10( d2$p.prof + 1  )
-d2$pov.rate <- log10( d2$pov.rate + 1 )
+d2$MHV.Growth.00.to.12[ d2$MHV.Growth.00.to.12 > 200 ] <- NA
 d4 <- sample_n( d2, 5000 ) %>% na.omit()
 pairs( d4, upper.panel=panel.cor, lower.panel=panel.smooth )
 ```
@@ -421,13 +562,14 @@ reg.data <- d
 reg.data$mhv.growth[ reg.data$mhv.growth > 200 ] <- NA
 reg.data$p.unemp <- log10( reg.data$p.unemp + 1 )
 reg.data$p.vacant <- log10( reg.data$p.vacant + 1 )
-reg.data$pov.rate <- log10( reg.data$pov.rate + 1 )
-m1 <- lm( mhv.growth ~  pov.rate, data=reg.data )
+reg.data$p.rent <- log10( reg.data$p.rent + 1 )
+m1 <- lm( mhv.growth ~  p.rent, data=reg.data )
 m2 <- lm( mhv.growth ~  p.unemp, data=reg.data )
-m3 <- lm( mhv.growth ~  pov.rate + p.unemp, data=reg.data )
+m3 <- lm(mhv.growth ~ p.vacant, data = reg.data)
+m4 <- lm( mhv.growth ~  p.rent + p.unemp + p.vacant, data=reg.data )
 
 # display model
-stargazer( m1, m2, m3, 
+stargazer( m1, m2, m3, m4,
            type="text", #S_TYPE,
            digits=2,
            omit.stat = c("rsq","f") )
