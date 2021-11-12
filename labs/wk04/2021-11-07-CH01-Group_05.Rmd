@@ -15,16 +15,6 @@ output:
     variant: gfm
 ---
 
-```{r}
-#professional growth
-#percent vacant homes
-#per capita income/household income
-```
-
-
-
-
-
 ```{r setup, include=FALSE}
 # define chunk options
 knitr::opts_chunk$set(echo = TRUE, 
@@ -69,11 +59,6 @@ Today's date is `r today()`.
 
 ## Data Information
 
-* Data includes only specified owner-occupied housing units-one-family houses on less than 10 acres without a business or medical office on the property.
-* Excludes mobile homes, houses with a business or medical office, houses on 10 or more acres, and housing units in multi-unit structures.
-*Owner-Occupied is defined as a housing unit with the owner or co-owner living in the unit, even if it is morgaged or not fully paid for.  The owner or co-owner must live in the unit and usually is Person 1 on the questionnaire.  
-* All cases from the data with a Median Home Value less than $10,000 in 2000 and high home values in 2010 have been dropped.  
-
 
 ```{r}
 d1 <- readRDS(here::here("data/rodeo/LTDB-2010.rds"))
@@ -98,7 +83,8 @@ d <- dplyr::select( d, tractid,
              ag25up00, hs00, col00, 
              pop00.x, nhwht00, nhblk00, hisp00, asian00, empclf12, vac10, hinc12,hu12,
              h30old00, h30old12,rent10,
-             cbsa, prof12, cbsaname ) %>% na.omit()
+             cbsa, prof12, cbsaname ) %>% 
+  filter(clf00 !=0, clf12 !=0, empclf00 !=0, empclf12 !=0) %>% na.omit()
 
 
 d <- 
@@ -122,7 +108,8 @@ d <-
           p.prof.change = 100 * (prof12 - prof00)/prof00,
           p.rent = 100 * rent00/hu00,
           p.rent10 = 100 * rent10/hu12,
-          pov.rate = 100 * npov00 / dpov00 )
+          pov.rate = 100 * npov00 / dpov00 ) %>% filter(p.vacant != "NaN", p.vacant10 != "NaN",
+                                                        p.unemp != "-Inf") %>% na.omit()
 
 
 # inflation rate
@@ -172,15 +159,7 @@ pairs(d3, upper.panel = panel.cor, lower.panel = panel.smooth)
 ```
 
 ```{r}
-#Professional Employee and Household Income
-
-prof.00 <- d$p.prof00
-prof.10 <- d$p.prof10
-prof.change <- prof.10 - prof.00
-p.prof.change <- prof.change/prof.00
-p.prof.growth <- log10(p.prof.change +1)
-d$prof.change <- prof.change
-d$prof.growth <- p.prof.growth
+#Household Income
 
 hinc.00 <- d$hinc00 * 1.28855
 hinc.10 <- d$hinc12
@@ -191,42 +170,24 @@ p.hinc.growth <- log10(p.hinc.change +1)
 d$hinc.change <- p.hinc.change
 d$hinc.growth <- p.hinc.growth
 
-
-cor( hinc.00, prof.00, use="pairwise.complete" )
-log.p.hinc.00 <- log10( hinc.00 + 1 )
-log.p.prof.00 <- log10( prof.00 + 1 )
-cor( log.p.hinc.00, log.p.prof.00, use="pairwise.complete" )
-
-
 ```
 
 ```{r}
 
-#% Unemployed and % Renting
-
-rent.00 <- d$p.rent
-rent.10 <- d$p.rent10
-rent.change <- rent.10 - rent.00
-p.rent.change <- rent.change/rent.00
-p.rent.growth <- log10(p.rent.change +1)
-
-d$rent.change <- p.rent.change
-d$rent.growth <- p.rent.growth
-
+#% Unemployed 
+#d$p.unemp[ d$p.unemp > 80 & d$p.unemp <= 1 ] <- NA
+#d$p.unemp10[ d$p.unemp10 > 80 & d$unemp.00 <= 1 ] <- NA
 unemp.00 <- d$p.unemp
 unemp.10 <- d$p.unemp10
 unemp.change <- unemp.10 - unemp.00
 p.unemp.change <- unemp.change/unemp.00
+
 p.unemp.growth <- log10(p.unemp.change +1)
 
 d$unemp.change<- p.unemp.change
+d$unemp.change[d$unemp.change > 80 | d$unemp.change < 1] <- NA
 d$unemp.growth  <- p.unemp.growth
-
-
-cor( rent.00, unemp.00, use="pairwise.complete" )
-log.p.rent <- log10( rent.00 + 1 )
-log.p.unemp <- log10( unemp.00 + 1 )
-cor( log.p.rent, log.p.unemp, use="pairwise.complete" )
+d$unemp.growth[d$unemp.growth > 80 | d$unemp.growth < 1] <- NA
 
 ```
 
@@ -235,8 +196,15 @@ cor( log.p.rent, log.p.unemp, use="pairwise.complete" )
 #Vacancy Rate 
 vacant.00 <- d$p.vacant
 vacant.10 <- d$p.vacant10
-p.vacant.change <- (vacant.10 - vacant.00)/vacant.00
+vacant.change <- vacant.10 - vacant.00
+p.vacant.change <- vacant.change/vacant.00
+p.vacant.growth <- log10(p.vacant.change + 1)
+
 d$vacant.change <- p.vacant.change
+d$vacant.change[d$vacant.change > 80 | d$vacant.change < 1] <- NA
+d$vacant.growth <- p.vacant.growth
+d$vacant.growth[d$vacant.growth > 80 | d$vacant.growth < 1] <- NA
+
 ```
 
 
@@ -248,23 +216,21 @@ df <- data.frame( MedianHomeValue2000=mhv.00,
                   MHV.Growth.00.to.12=mhv.growth,
                   Vacant2000 = vacant.00,
                   Vacant2010 = vacant.10,
-                  Vacancyrate = p.vacant.change,
+                  Vacant.change = p.vacant.change,
+                  Vacant.growth = p.vacant.growth,
                   Unemp2000 = unemp.00,
                   Unemp2010 = unemp.10,
                   Unemp.change = p.unemp.change,
                   Unemp.growth = p.unemp.growth,
-                  Rent2000 = rent.00,
-                  Rent2010 = rent.10,
-                  Rent.change = p.rent.change,
-                  Rent.growth = p.rent.growth,
                   Income2000 = hinc.00,
                   Income2010 = hinc.10,
                   Income.change = p.hinc.change,
-                  Income.growth = p.hinc.growth,
-                  Prof2000 = prof.00,
-                  Prof2010 = prof.10,
-                  Prof.change = p.prof.change,
-                  Prof.growth = p.prof.growth)
+                  Income.growth = p.hinc.growth)
+
+df$Vacant.growth[df$Vacant.growth > 80 | df$Vacant.growth < 1] <- NA
+df$Vacant.change[df$Vacant.change > 80 | df$Vacant.change < 1] <- NA
+df$Unemp.change[df$Unemp.change > 80 | df$Unemp.change < 1] <- NA
+df$Unemp.growth[df$Unemp.growth > 80 | df$Unemp.growth < 1] <- NA
                   
 ```
 
@@ -272,12 +238,9 @@ df <- data.frame( MedianHomeValue2000=mhv.00,
 
 
 ```{r}
-#Household Income and Professional Employee Change
-measurement.1 <- select(df, Prof.growth, Income.growth) %>% na.omit ()
+#Correlation check
+measurement.1 <- select(df, Vacant.change, Income.change, Unemp.change) %>% na.omit ()
 
-measurement.2 <- select(df, Rent.growth, Unemp.growth) %>% na.omit()
-
-measurement.3 <- df$Vacancyrate %>% na.omit()
 ```
 
 
@@ -286,15 +249,7 @@ set.seed(1234)
 pairs(measurement.1, lower.panel = panel.smooth, upper.panel = panel.cor)
 ```
 
-
-```{r}
-set.seed(1234)
-pairs(measurement.2, lower.panel = panel.smooth, upper.panel = panel.cor)
-```
-
-
 ## Median Home Value
-
 
 ```{r}
 hist( df$MedianHomeValue2000, breaks=200, xlim=c(0,500000), 
@@ -377,54 +332,6 @@ cbsa_stats_df %>% head()
 
 #### Metro Demographics
 
-**Professional Employee**
-```{r}
-par( mfrow=c(2,2) )
-hist( df$Prof2000, breaks=150, col="gray20", border="white", 
-      yaxt="n", xlab="xlabel", ylab="", main="Percent of Professional Employees 2000",)
-hist( log(df$Prof2000+1), breaks=150, col="gray20", border="white",
-      yaxt="n", xlab="", ylab="", main="Percent of Professional Employees 2000 (logged)")
-hist( df$Prof2010, breaks=150, col="gray20", border="white", 
-      yaxt="n", xlab="xlabel", ylab="", main="Percent of Professional Employees 2010",)
-hist( log(df$Prof2010+1), breaks=150, col="gray20", border="white",
-      yaxt="n", xlab="", ylab="", main="Percent of Professional Employees 2010 (logged)")
-```
-
-```{r}
-par( mfrow=c(1,2) )
-hist( df$Prof.change, breaks= 150, col="gray20", border="white", xlim=c(-100,250),
-      yaxt="n", xlab="xlabel", ylab="", main="Percent of Professional Employees Change 2000 to 2010",)
-hist( log(df$Prof.change + 1), breaks=150, col="gray20", border="white",xlim=c(-2,2),
-      yaxt="n", xlab="", ylab="", main="Percent of Professional Employees Change 2000 to 2010(logged)")
-```
-
-**Rent**
-
-```{r}
-par( mfrow=c(2,2) )
-hist( df$Rent2000, breaks=150, col="gray20", border="white", 
-      yaxt="n", xlab="xlabel", ylab="", main="Percent of Rental Homes 2000",)
-hist( log(df$Rent2000+1), breaks=150, col="gray20", border="white",
-      yaxt="n", xlab="", ylab="", main="Percent of Rental Homes 2000 (logged)")
-hist( df$Rent2010, breaks=150, col="gray20", border="white", 
-      yaxt="n", xlab="xlabel", ylab="", main="Percent of Rental Homes 2010",)
-hist( log(df$Rent2010 +1), breaks=150, col="gray20", border="white",
-      yaxt="n", xlab="", ylab="", main="Percent of Rental Homes 2010 (logged)")
-```
-
-
-
-```{r}
-#Rental Home Changes
-
-par( mfrow=c(1,2) )
-hist( df$Rent.change, breaks= 150, col="gray20", border="white", xlim=c(-100,250),
-      yaxt="n", xlab="xlabel", ylab="", main="Percent of Rental Homes from 2000 to 2010",)
-hist( log(df$Rent.change + 1), breaks=150, col="gray20", border="white",xlim=c(-2,2),
-      yaxt="n", xlab="", ylab="", main="Percent of Rental Homes from 2000 to 2010(logged)")
-```
-
-
 **Vacancy Rate**
 
 ```{r}
@@ -441,15 +348,13 @@ hist( log(df$Vacant2010 +1), breaks=150, col="gray20", border="white",
 ```
 
 
-
-
 ```{r}
 #Vacancy Change
 
 par( mfrow=c(1,2) )
-hist( df$Vacancyrate, breaks= 150, col="gray20", border="white",
+hist( df$Vacant.change, breaks= 150, col="gray20", border="white",
       yaxt="n", xlab="xlabel", ylab="", main="Percent of Vacancy from 2000 to 2010",)
-hist( log(df$Vacancyrate + 1), breaks=150, col="gray20", border="white",
+hist( log(df$Vacant.change + 1), breaks=150, col="gray20", border="white",
       yaxt="n", xlab="", ylab="", main="Percent of Vacancy from 2000 to 2010(logged)")
 
 
@@ -530,7 +435,7 @@ hist( log(df$Income.change + 1), breaks=150, col="gray20", border="white",
 
 ```{r logtransformation, echo=FALSE}
 set.seed( 1234 )
-d2 <- select( df, MHV.Growth.00.to.12, Vacancyrate, Prof.growth, Unemp.growth, Rent.growth, Income.growth )
+d2 <- select( df, MHV.Growth.00.to.12, Vacant.growth, Unemp.growth, Income.growth )
 # recode some vars to remove outliers and skew
 d2$MHV.Growth.00.to.12[ d2$MHV.Growth.00.to.12 > 200 ] <- NA
 d4 <- sample_n( d2, 5000 ) %>% na.omit()
@@ -541,10 +446,18 @@ pairs( d4, upper.panel=panel.cor, lower.panel=panel.smooth )
 **Correlation between MHV and Vacancy Rates**
 
 ```{r}
-jplot( d3$p.vacant, d3$mhv.growth, ylim=c(-50,100),
+jplot( df$Vacant.change, df$MHV.Growth.00.to.12, ylim=c(-50,100),
        lab1="Vacancy Rates", lab2="MHV Growth" )
 ```
+```{r}
+jplot( df$Unemp.change, df$MHV.Growth.00.to.12, ylim=c(-50,100),
+       lab1="Unemployment Rates", lab2="MHV Growth" )
+```
 
+```{r}
+jplot( df$Income.growth, df$MHV.Growth.00.to.12, ylim=c(-50,100),
+       lab1="Household Income Change(logged)", lab2="MHV Growth" )
+```
 
 
 
@@ -555,18 +468,18 @@ jplot( d3$p.vacant, d3$mhv.growth, ylim=c(-50,100),
 library(stargazer)
 
 # load constants ----
-STARGAZER_OUTPUT_TYPE = "html"
+STARGAZER_OUTPUT_TYPE = "text"
 
 # create model ----
 reg.data <- d
 reg.data$mhv.growth[ reg.data$mhv.growth > 200 ] <- NA
-reg.data$p.unemp <- log10( reg.data$p.unemp + 1 )
-reg.data$p.vacant <- log10( reg.data$p.vacant + 1 )
-reg.data$p.rent <- log10( reg.data$p.rent + 1 )
-m1 <- lm( mhv.growth ~  p.rent, data=reg.data )
+reg.data$p.unemp <- log10( reg.data$unemp.change + 1 )
+reg.data$p.vacant <- log10( reg.data$vacant.change + 1 )
+reg.data$p.hinc <- log10( reg.data$hinc.change + 1 )
+m1 <- lm( mhv.growth ~  p.hinc, data=reg.data )
 m2 <- lm( mhv.growth ~  p.unemp, data=reg.data )
 m3 <- lm(mhv.growth ~ p.vacant, data = reg.data)
-m4 <- lm( mhv.growth ~  p.rent + p.unemp + p.vacant, data=reg.data )
+m4 <- lm( mhv.growth ~  p.hinc + p.unemp + p.vacant, data=reg.data )
 
 # display model
 stargazer( m1, m2, m3, m4,
@@ -629,7 +542,7 @@ axis( side=1, at=1:3, labels=c("Tyler","Youngstown","Syracuse"),
       tick=F, col.axis="gray60", cex.axis=1.3 )
 ```
 
-**Baseline metro-levle home value growth**
+**Baseline metro-level home value growth**
 
 ```{r}
 m <- lm( mhv.growth ~ factor(cbsaname) + p.unemp - 1, data=d5 )
