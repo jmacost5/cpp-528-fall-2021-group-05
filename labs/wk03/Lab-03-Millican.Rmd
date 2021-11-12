@@ -1,0 +1,286 @@
+---
+title: "Lab-03-Millican-B"
+author: "Melissa Millican"
+date: "11/3/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include=FALSE}
+library(tidyverse)
+library(here)
+library(pander)
+library(dplyr)
+library(knitr)
+library(stargazer)
+library(scales)
+#set stargazer type to text for previewing in RMD docs but convert to type HTML when knitting
+
+s.type <- "text"
+
+import::here("create_df",
+             "choose_var",
+             "gent_var",
+             "jplot",
+             "compare_dfs",
+             "gent_percent",
+             "gent_change_var",
+             
+             # notice the use of here::here() that points to the .R file
+             # where all these R objects are created
+             .from = here::here("labs/wk03/utilitiesmm.R"),
+             .character_only = TRUE)
+
+```
+
+
+```{r include=FALSE}
+d1 <- readRDS(here::here("data/rodeo/LTDB-1990.rds"))
+d2 <- readRDS(here::here("data/rodeo/LTDB-2000.rds"))
+md <- readRDS(here::here("data/rodeo/LTDB-META-DATA.rds"))
+#nrow(d1)
+d <- create_df (d1, d2)
+nrow(d)
+#table(d$urban)
+vars <- compare_dfs(df1 = d1, df2 = d2)
+d.full <- d
+d <- d.full
+d <- filter(d, urban == "urban")
+choose_var(d)
+```
+
+## Part I Change in Home Value from 1990 to 2000.
+
+```{r}
+#Create MHV Change
+mhv.00 <- d$mhmval00 
+mhv.90 <- d$mhmval90*1.28855
+
+mhv.change <- mhv.00 - mhv.90
+
+df <- data.frame (MedianHomeValue2000 = mhv.00,
+                  MedianHomeValue1990 = mhv.90,
+                  Change.90.to.00 = mhv.change)
+```
+
+```{r echo=FALSE}
+hist(mhv.change/1000, breaks = 500, 
+     xlim = c(-100, 500), yaxt = "n", xaxt = "n",
+     xlab = "Thousand of US Dollars (adjusted to 2000)",
+     cex.lab = 1.5,
+     ylab = "", main = "Change in Median Home Value 1990 to 2000",
+     col = "gray20", border = "white")
+
+axis(side = 1, at = seq(from = -100, to = 500, by = 100),
+     labels = paste0("$", seq(from = -100, to = 500, by = 100),
+                    "k"))
+
+mean.x <- mean(mhv.change/1000, na.rm = T)
+abline( v = mean.x, col = "darkorange", lwd = 2, lty = 2)
+text(x = 200, y = 1500,
+     labels = paste0("Mean = ", dollar(round(1000*mean.x, 0))),
+     col = "darkorange",
+     cex = 1.8, 
+     pos = 3)
+
+
+median.x <- median(mhv.change/1000, na.rm = T)
+abline( v = median.x, col = "dodgerblue", lwd = 2, lty = 2)
+text(x = 200, y = 2000,
+     labels = paste0("Median = ", dollar(round(1000*median.x, 0))),
+     col = "dodgerblue", 
+     cex = 1.8,
+     pos = 3)
+```
+   
+**The average change in Median Home values from 1990 to 2000 was $74,103 compared to 2000 to 2010 which was $60,047.** 
+
+
+Another way to look at the change is based on percentage
+```{r include=FALSE}
+mhv.90[mhv.90 < 10000] <- NA
+pct.change <- mhv.change/mhv.90
+summary(pct.change)
+```
+
+
+```{r echo=FALSE}
+#Plot the percent change variable
+hg <- 
+  hist(pct.change, breaks = 2000,
+       xlim = c(-1, 2), 
+       yaxt = "n",
+       xaxt = "n",
+       xlab = "", cex.main = 1.5,
+       ylab = "", main = "Growth in Home Value by Census Tract 1990 to 2000", 
+       col = "gray40", 
+       border = "white")
+
+axis(side = 1, at = seq(from = -1, to = 2, by = 0.5),
+     labels = paste0(seq(from = -100, to = 200, by = 50),
+                     "%"))
+ymax <- max(hg$count)
+
+mean.x <- mean(pct.change, na.rm = T)
+abline(v = mean.x, col = "darkorange", lwd = 2, lty = 2)
+text(x = 1, y = (0.5*ymax),
+     labels = paste0("Mean = ", round(100*mean.x, 0), "%"),
+     col = "darkorange", cex = 1.8, pos = 4)
+
+median.x <- median(pct.change, na.rm = T)
+abline(v = median.x, col = "dodgerblue", lwd = 2, lty = 2)
+text(x = 1, y = (0.6*ymax),
+     labels = paste0("Median = ", round(100*median.x, 0), "%"),
+     col = "dodgerblue", cex = 1.8, pos = 4)
+```
+
+### Measuring Gentrification
+
+```{r include=FALSE}
+#adjust 2000 home values for inflation
+
+mhv.00 <- d.full$mhmval00
+mhv.90 <- d.full$mhmval90*128855
+
+mhv.change <- mhv.00 - mhv.90
+
+mhv.90[mhv.90 < 10000] <- NA
+pct.change <- 100 * (mhv.change / mhv.90)
+summary(pct.change)
+
+d.full$mhv.00 <- mhv.00
+d.full$mhv.90 <- mhv.90
+d.full$mhv.change <- mhv.change
+d.full$pct.change <- pct.change
+d3 <- gent_var(d.full)
+d3 <- gent_percent(d3)
+d3 <- gent_change_var(d3)
+```
+**One way of measuring gentrification per https://watts-college.github.io/cpp-528-fall-2021/articles/gentrification/udp-gentrification-methodology-austin.pdf is to look at the increase in Bachelor's Degree.  Based on this approach it can be seen there is a 24% gentrification rate from 1990 to 2000. **
+```{r echo=FALSE}
+
+#Home value in lower than average home in a metro in 2000
+poor.1990 <- d3$metro.mhv.pct.90 < 50
+
+#above average pay change for metro
+diverse.1990 <- d3$metro.race.rank.90 > 50
+
+#home values increased more than overall city gains
+#change in percentile rank within the metro
+mhv.pct.increase <- d3$metro.mhv.pct.change > 0
+
+#proportion of College Education increase by more than 3 percent
+
+loss.diversity <- d3$race.change > 3
+
+g.flag <- poor.1990 & diverse.1990 & mhv.pct.increase &  loss.diversity
+
+num.candidates <- sum (poor.1990 & diverse.1990, na.rm = T)
+num.gentrified <- sum(g.flag, na.rm = T)
+
+num.gentrified/num.candidates
+
+```
+### Spatial Visualization
+
+Home Values
+
+**Q1:** Describe the distribution of home values in 1990 - where are high and low-value tracts located in the city/cities?
+
+
+```{r include=FALSE}
+#install.packages("geojsonio")
+library( geojsonio )   # read shapefiles
+library( sp )          # work with shapefiles
+library( sf )          # work with shapefiles - simple features format
+#install.packages("mclust")
+library( mclust )      # cluster analysis 
+#install.packages("tmap")
+library( tmap )        # theme maps
+library( ggplot2 )     # graphing 
+#install.packages("ggthemes")
+library( ggthemes )    # nice formats for ggplots
+library( dplyr )       # data wrangling 
+#install.packages("tidycensus")
+library( tidycensus )
+#install.packages("cartogram")
+library( cartogram )  # spatial maps w/ tract size bias reduction
+library( maptools )   # spatial object manipulation 
+github.url <- "~/CPP528/cpp-528-fall-2021-group-05/labs/wk03/msp_dorling.geojson"
+stlouis <- geojson_read(x = github.url, what="sp")
+
+plot(stlouis)
+
+```
+
+```{r include=FALSE}
+#create small dataframe for the merge
+
+df <- data.frame(tractid = d.full$tractid,
+                 d.full$mhv.00,d.full$mhv.90, d.full$mhv.change, d.full$pct.change)
+
+# create GEOID that matches GIS format
+#create a geoID for merging by tract
+
+df$GEOID <- substr(df$tractid, 6, 18)
+df$GEOID <- gsub("-", "", df$GEOID) #remove hyphens
+class(df$GEOID)
+
+stlouis <- merge(stlouis, df, by.x = "GEOID", by.y = "GEOID")
+
+```
+
+```{r}
+stlouis <- spTransform(stlouis, CRS("+init=epsg:3395"))
+bb <- st_bbox(c(xmin = -10259876.07, xmax = -9920876,
+                ymax = 4715306, ymin = 4559306),
+              crs = st_crs("+init=epsg:3395"))
+tm_shape(stlouis, bbox = bb) +
+  tm_polygons(col = "d.full.mhv.90", n = 10, style = "quantile", 
+              palette = "Spectral") +
+  tm_layout("Dorling Cartogram", title.position = c("right", "top"))
+```
+
+**The highest median house hold values are in the West of the city center of St. Louis.  The higher median household values are in the Missouri versus the Illinois side of St. Louis.  The lower value tracts are in the East in the Illinois side of St. Louis.**
+
+
+
+
+**Q2:** Compare values in 2000 to changes in values from 1990-2000. Do the largest gains occur in tracts with above or below-average home prices in 2000?
+
+
+
+```{r}
+#msp_dorling <- spTransform(msp_dorling, CRS("+init=epsg:3395"))
+bb <- st_bbox(c(xmin = -10259876.07, xmax = -9920876,
+                ymax = 4715306, ymin = 4559306),
+              crs = st_crs("+init=epsg:3395"))
+tm_shape(stlouis, bbox = bb) +
+  tm_polygons(col = "d.full.mhv.change", n = 10, style = "quantile", 
+              palette = "Spectral") +
+  tm_layout("Dorling Cartogram", title.position = c("right", "top"))
+```
+
+Not sure what is wrong here, but I know it is not correct.  However, based on this the larger change occurs with the lowest level value tracts. 
+
+
+
+**Q3:** Create a map that highlights tracts that are candidates for gentrification in 2000 and tracts that gentrify between 1990 and 2000. Do you find any meaningful patterns in where gentrification occurs?
+
+```{r}
+#msp_dorling <- spTransform(msp_dorling, CRS("+init=epsg:3395"))
+bb <- st_bbox(c(xmin = -10259876.07, xmax = -9920876,
+                ymax = 4715306, ymin = 4559306),
+              crs = st_crs("+init=epsg:3395"))
+tm_shape(stlouis, bbox = bb) +
+  tm_polygons(col = "d.full.pct.change", n = 10, style = "quantile", 
+              palette = "Spectral") +
+  tm_layout("Dorling Cartogram", title.position = c("right", "top"))
+```
+
+
+Again, could not get the correct results.  
+
