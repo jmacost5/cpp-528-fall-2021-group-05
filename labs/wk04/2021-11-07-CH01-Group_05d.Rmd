@@ -1,0 +1,651 @@
+---
+title: "Lab 04 - Predicting MHV Change"
+subtitle: "CPP528 Group 05 Fall 2021"
+author: "Cristian E. Nuno"
+updated by: "Amy T. Trumpower, Melissa Millican, Sean Harrington, Joseph Papcznski"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  rmdformats::downcute:
+    self_contained: true
+    thumbnails: true
+    lightbox: true
+    gallery: false
+    highlight: tango
+    df_print: paged
+  md_document:
+    variant: gfm
+---
+
+```{r setup, include=FALSE}
+# define chunk options
+knitr::opts_chunk$set(echo = TRUE, 
+                      message = FALSE, 
+                      warning = FALSE, 
+                      eval = TRUE, 
+                      fig.width=10)
+# load necessary functions
+source(here::here("analysis/utilities.R"))
+```
+
+
+```{r include=FALSE}
+#Load the necessary packages ----
+library(dplyr)
+library(here)
+library(knitr)
+library(pander)
+library(stargazer)
+library(scales)
+#install.packages("namespace")
+#install.packages("rmarkdown")
+library(rmarkdown)
+library(namespace)
+#set randomization seed ---
+set.seed(1234)
+#Load necessary functions and objects ---
+#note:  all of these are R objects that will be used throughout this .rmd file
+import::here("S_TYPE",
+             "panel.cor",
+             "cbsa_stats_df",
+             "panel.smooth",
+             "jplot",
+             "d",
+             "df",
+             "dataprocessing",
+             "dataw"
+             .from = here::here("labs/wk04/lab_04_source.R"),
+             .character_only = TRUE)
+```
+
+
+Today's date is `r today()`.
+
+
+## Data Information
+
+
+```{r}
+#d <- datawrangling()
+
+d1 <- readRDS(here::here("data/rodeo/LTDB-2010.rds"))
+d2 <- readRDS(here::here("data/rodeo/LTDB-2000.rds"))
+md <- readRDS(here::here("data/rodeo/LTDB-META-DATA.rds"))
+d1 <- dplyr::select( d1, - year )
+d2 <- dplyr::select( d2, - year )
+d <- merge( d1, d2, by="tractid" )
+d <- merge( d, md, by="tractid" )
+
+#d<- dataprocessing(d)
+
+# filter rural districts
+d <- dplyr::filter( d, urban == "urban" )
+#keep a set of data for backup
+d.bkup <- d
+
+d <- dplyr::select( d, tractid, 
+             mhmval00, mhmval12, 
+             hinc00, 
+             hu00, vac00, own00, rent00, h30old00,
+             empclf00, clf00, clf12, unemp00,unemp12, prof00,  
+             dpov00, npov00,
+             ag25up00, hs00, col00, 
+             pop00.x, nhwht00, nhblk00, hisp00, asian00, empclf12, vac10, hinc12,hu12,
+             h30old00, h30old12,rent10,
+             cbsa, prof12, cbsaname ) %>% 
+  filter(clf00 !=0, clf12 !=0, empclf00 !=0, empclf12 !=0) %>% na.omit()
+
+d <- 
+  d %>%
+  dplyr::mutate( p.white = 100 * nhwht00 / pop00.x,
+          p.black = 100 * nhblk00 / pop00.x,
+          p.hisp = 100 * hisp00 / pop00.x, 
+          p.asian = 100 * asian00 / pop00.x,
+          p.hs = 100 * (hs00+col00) / ag25up00,
+          p.col = 100 * col00 / ag25up00,
+          p.prof00 = 100 * prof00 / empclf00,
+          p.prof10 = 100 * prof12/empclf12,
+          p.unemp = 100 * unemp00 / clf00,
+          p.unemp10 = 100 * unemp12/clf12,
+          p.vacant = 100 * vac00 / hu00,
+          p.vacant10 = 100 * vac10/hu12,
+          mhv.change.00.to.10 = mhmval12 - mhmval00,
+          p.mhv.change = 100 * (mhmval12 - mhmval00) / mhmval00,
+          p.income.change = 100 * (hinc12 - hinc00)/hinc00,
+          p.30year.change = 100 * (h30old12 - h30old00)/h30old00,
+          p.prof.change = 100 * (prof12 - prof00)/prof00,
+          p.rent = 100 * rent00/hu00,
+          p.rent10 = 100 * rent10/hu12,
+          pov.rate = 100 * npov00 / dpov00 ) %>% filter(p.vacant != "NaN", p.vacant10 != "NaN",
+                                                      p.unemp != "-Inf") %>% na.omit()
+# inflation rate
+INFLATION_RATE <- 1.28855 
+# adjust 2000 home values for inflation 
+mhv.00 <- d$mhmval00 * INFLATION_RATE 
+mhv.10 <- d$mhmval12
+# change in MHV in dollars
+mhv.change <- mhv.10 - mhv.00
+# drop low 2000 median home values
+# to avoid unrealistic growth rates.
+#
+# tracts with homes that cost less than
+# $10,000 are outliers
+mhv.00[ mhv.00 < 10000 ] <- NA
+# change in MHV in percent
+mhv.growth <- 100 * ( mhv.change / mhv.00 )
+d$mhv.00 <- mhv.00
+d$mhv.10 <- mhv.10
+d$mhv.change <- mhv.change
+d$mhv.growth <- mhv.growth 
+d$mhv.growth [mhv.growth > 200] <- NA
+```
+
+
+## Census Variables
+###  The following factors were chosen to identify gentrification:
+- Household Income: An increase in household income may indicate gentrification
+- Percentage unemployed: a decrease in unemployment rate may indicate gentrification
+- Vacancy Rate: A decrease in vacancy rate may indicate gentrification
+
+```{r}
+#Household Income
+hinc.00 <- d$hinc00 * 1.28855
+hinc.10 <- d$hinc12
+hinc.change <- hinc.10 - hinc.00
+p.hinc.change <- hinc.change/hinc.00
+p.hinc.growth <- log10(p.hinc.change +1)
+d$hinc.change <- p.hinc.change
+d$hinc.growth <- p.hinc.growth
+```
+
+```{r}
+#% Unemployed 
+#d$p.unemp[ d$p.unemp > 80 & d$p.unemp <= 1 ] <- NA
+#d$p.unemp10[ d$p.unemp10 > 80 & d$unemp.00 <= 1 ] <- NA
+unemp.00 <- d$p.unemp
+unemp.10 <- d$p.unemp10
+unemp.change <- unemp.10 - unemp.00
+p.unemp.change <- unemp.change/unemp.00
+p.unemp.growth <- log10(p.unemp.change +1)
+d$unemp.change<- p.unemp.change
+d$unemp.change[d$unemp.change > 80 | d$unemp.change < 1] <- NA
+d$unemp.growth  <- p.unemp.growth
+d$unemp.growth[d$unemp.growth > 80 | d$unemp.growth < 1] <- NA
+```
+
+
+```{r}
+#Vacancy Rate 
+vacant.00 <- d$p.vacant
+vacant.10 <- d$p.vacant10
+vacant.change <- vacant.10 - vacant.00
+p.vacant.change <- vacant.change/vacant.00
+p.vacant.growth <- log10(p.vacant.change + 1)
+d$vacant.change <- p.vacant.change
+d$vacant.change[d$vacant.change > 80 | d$vacant.change < 1] <- NA
+d$vacant.growth <- p.vacant.growth
+d$vacant.growth[d$vacant.growth > 80 | d$vacant.growth < 1] <- NA
+```
+
+
+# create mini data frame
+```{r}
+df <- data.frame( MedianHomeValue2000=mhv.00, 
+                  MedianHomeValue2010=mhv.10, 
+                  MHV.Change.00.to.10=mhv.change,
+                  MHV.Growth.00.to.12=mhv.growth,
+                  Vacant2000 = vacant.00,
+                  Vacant2010 = vacant.10,
+                  Vacant.change = p.vacant.change,
+                  Vacant.growth = p.vacant.growth,
+                  Unemp2000 = unemp.00,
+                  Unemp2010 = unemp.10,
+                  Unemp.change = p.unemp.change,
+                  Unemp.growth = p.unemp.growth,
+                  Income2000 = hinc.00,
+                  Income2010 = hinc.10,
+                  Income.change = p.hinc.change,
+                  Income.growth = p.hinc.growth)
+df$Vacant.growth[df$Vacant.growth > 80 | df$Vacant.growth < 1] <- NA
+df$Vacant.change[df$Vacant.change > 80 | df$Vacant.change < 1] <- NA
+df$Unemp.change[df$Unemp.change > 80 | df$Unemp.change < 1] <- NA
+df$Unemp.growth[df$Unemp.growth > 80 | df$Unemp.growth < 1] <- NA
+                  
+```
+
+## Measurement Variables
+
+
+```{r}
+#Correlation check
+measurement.1 <- select(df, Vacant2000, Income2000, Unemp2000, MedianHomeValue2000) %>% na.omit ()
+```
+
+
+```{r}
+set.seed(1234)
+
+pairs(measurement.1, lower.panel = panel.smooth, upper.panel = panel.cor)
+```
+
+```{r}
+measurement.2 <- select(df, Vacant.change, Income.change, Unemp.change, MHV.Change.00.to.10) %>% na.omit ()
+```
+
+```{r}
+set.seed(1234)
+
+pairs(measurement.2, lower.panel = panel.smooth, upper.panel = panel.cor)
+```
+
+## Median Home Value
+
+```{r}
+hist( df$MedianHomeValue2000, breaks=200, xlim=c(0,500000), 
+      col="gray20", border="white",
+      axes=F, 
+      xlab="MHV (median = $138k)",
+      ylab="",
+      main="Median Home Value in 2000 (2010 US dollars)" )
+axis( side=1, at=seq(0,500000,100000), 
+      labels=c("$0","$100k","$200k","$300k","$400k","$500k") )
+abline( v=median( df$MedianHomeValue2000, na.rm=T ), col="orange", lwd=3 )
+```
+
+
+
+### Descriptives
+
+```{r}
+stargazer( df, 
+           type="html", #S_TYPE, 
+           digits=0, 
+           summary.stat = c("min", "p25","median","mean","p75","max") )
+```
+
+### Change in MHV 2000 - 2010
+
+```{r}
+hist( df$MHV.Change.00.to.10/1000, breaks=500, 
+      xlim=c(-100,500), yaxt="n", xaxt="n",
+      xlab="Thousand of US Dollars (adjusted to 2010)", cex.lab=1.5,
+      ylab="", main="Change in Median Home Value 2000 to 2010",
+      col="gray20", border="white" )
+axis( side=1, at=seq( from=-100, to=500, by=100 ), 
+      labels=paste0( "$", seq( from=-100, to=500, by=100 ), "k" ) )
+        
+mean.x <- mean( df$MHV.Change.00.to.10/1000, na.rm=T )
+abline( v=mean.x, col="darkorange", lwd=2, lty=2 )
+text( x=200, y=1500, 
+      labels=paste0( "Mean = ", dollar( round(1000*mean.x,0)) ), 
+      col="darkorange", cex=1.8, pos=3 )
+median.x <- median( df$MHV.Change.00.to.10/1000, na.rm=T )
+abline( v=median.x, col="dodgerblue", lwd=2, lty=2 )
+text( x=200, y=2000, 
+      labels=paste0( "Median = ", dollar( round(1000*median.x,0)) ), 
+      col="dodgerblue", cex=1.8, pos=3 )
+```
+
+
+### Percent Change in Median Home Value 2000 to 2010
+
+```{r}
+hg <-
+hist( df$MHV.Growth.00.to.12, breaks=5000, 
+      xlim=c(-100,200), yaxt="n", xaxt="n",
+      xlab="", cex.main=1.5,
+      ylab="", main="Growth in Home Value by Census Tract 2000 to 2010",
+      col="gray40", border="white" )
+axis( side=1, at=seq( from=-100, to=200, by=50 ), 
+      labels=paste0( seq( from=-100, to=200, by=50 ), "%" ) )
+ymax <- max( hg$count )
+        
+mean.x <- mean( df$MHV.Growth.00.to.12, na.rm=T )
+abline( v=mean.x, col="darkorange", lwd=2, lty=2 )
+text( x=100, y=(0.5*ymax), 
+      labels=paste0( "Mean = ", round(mean.x,0), "%"), 
+      col="darkorange", cex=1.8, pos=4 )
+median.x <- median( df$MHV.Growth.00.to.12, na.rm=T )
+abline( v=median.x, col="dodgerblue", lwd=2, lty=2 )
+text( x=100, y=(0.6*ymax), 
+      labels=paste0( "Median = ", round(median.x,0), "%"), 
+      col="dodgerblue", cex=1.8, pos=4 )
+```
+
+## Metro Level Statistics
+
+```{r include=FALSE}
+cbsa_stats_df %>% head()
+```
+
+
+#### Metro Demographics
+
+**Vacancy Rate**
+
+```{r echo=FALSE}
+#Vacancy Rate 2000 and 2010
+par( mfrow=c(2,2) )
+hist( df$Vacant2000, breaks= 150, col="gray20", border="white", 
+      yaxt="n", xlab="", ylab="", xlim = c(-5,40), main="Percent of Vacancy 2000",)
+hist( log(df$Vacant2000+1), breaks= 150, col="gray20", border="white",
+      yaxt="n", xlab="", ylab="", main="Percent of Vacancy 2000 (logged)")
+hist( df$Vacant2010, breaks= 900, col="gray20", border="white", 
+      yaxt="n", xlab="", ylab="", xlim = c(-5,40), main="Percent of Vacancy 2010",)
+hist( log(df$Vacant2010 +1), breaks= 150, col="gray20", border="white",
+      yaxt="n", xlab="", ylab="", main="Percent of Vacancy 2010 (logged)")
+```
+
+```{r echo=FALSE}
+#Vacancy Change
+par( mfrow=c(1,2) )
+hist( df$Vacant.change, breaks= 300, col="gray20", border="white",
+      yaxt="n", xlab="", ylab="", xlim = c(0,10), main="Percent of Vacancy from 2000 to 2010",)
+hist( log(df$Vacant.change + 1), breaks=150, col="gray20", border="white",
+      yaxt="n", xlab="", ylab="", xlim = c(0,3), main="Percent of Vacancy from 2000 to 2010(logged)")
+```
+
+
+**Unemployment Rate**
+
+```{r echo=FALSE}
+#Unemployment Rate 2000 and 2010
+par( mfrow=c(2,2) )
+hist( df$Unemp2000, breaks=150, col="gray20", border="white", 
+      yaxt="n", xlab="", ylab="", xlim= c(-5,40), main="Percent of Unemployment 2000",)
+hist( log(df$Unemp2000+1), breaks=150, col="gray20", border="white",
+      yaxt="n", xlab="", ylab="", main="Percent of Unemployment 2000 (logged)")
+hist( df$Unemp2010, breaks=150, col="gray20", border="white", 
+      yaxt="n", xlab="", ylab="", xlim= c(-5,40), main="Percent of Unemployment 2010",)
+hist( log(df$Unemp2010 +1), breaks=150, col="gray20", border="white",
+      yaxt="n", xlab="", ylab="", main="Percent of Unemployment 2010 (logged)")
+```
+
+
+```{r echo=FALSE}
+#Unemployment Change
+par( mfrow=c(1,2) )
+hist( df$Unemp.change, breaks= 200, col="gray20", border="white",
+      yaxt="n", xlab="", ylab="", xlim = c(0,10), main="Percent of Unemp. Change from 2000 to 2010",)
+hist( log(df$Unemp.change + 1), breaks=150, col="gray20", border="white",
+      yaxt="n", xlab="", ylab="", xlim = c(0,4),main="Logged")
+```
+
+
+**Household Income**
+
+```{r echo=FALSE}
+#Household Income 2000 and 2010
+##These were labeled as % of Household income....is that right?
+par( mfrow=c(2,2) )
+hist( df$Income2000, breaks=150, col="gray20", border="white", 
+      yaxt="n", xlab="", ylab="", main="Household Income 2000",)
+hist( log(df$Income2000 +1), breaks=150, col="gray20", border="white",
+      yaxt="n", xlab="", ylab="", main="Income 2000 (logged)")
+hist( df$Income2010, breaks=150, col="gray20", border="white", 
+      yaxt="n", xlab="", ylab="", main="Household Income 2010",)
+hist( log(df$Income2010 +1), breaks=150, col="gray20", border="white",
+      yaxt="n", xlab="", ylab="", main="Household Income 2010 (logged)")
+```
+
+
+```{r echo=FALSE}
+#Household Income Change
+par( mfrow=c(1,2) )
+hist( df$Income.change, breaks= 500, col="gray20", border="white",
+      yaxt="n", xlab="", ylab="", xlim = c(-1,2), main="% of Household Income Change 2000 to 2010",)
+hist( log(df$Income.change + 1), breaks=500, col="gray20", border="white",
+      yaxt="n", xlab="", ylab="", xlim = c(-1,1), main="Logged")
+```
+
+
+**Correlation between MHV and Vacancy Rates**
+
+```{r}
+jplot( df$Vacant.change, df$MHV.Growth.00.to.12, ylim=c(-50,100),
+       lab1="Vacancy Rates", lab2="MHV Growth" )
+```
+```{r}
+jplot( df$Unemp.change, df$MHV.Growth.00.to.12, ylim=c(-50,100),
+       lab1="Unemployment Rates", lab2="MHV Growth" )
+```
+
+```{r}
+jplot( df$Income.growth, df$MHV.Growth.00.to.12, ylim=c(-50,100),
+       lab1="Household Income Change(logged)", lab2="MHV Growth" )
+```
+
+
+
+## Including regression output
+
+```{r regression, results='asis'}
+# load necessary packages ----
+library(stargazer)
+# load constants ----
+STARGAZER_OUTPUT_TYPE = "text"
+# create model ----
+reg.data <- d
+reg.data$mhv.growth[ reg.data$mhv.growth > 200 ] <- NA
+reg.data$p.unemp <- log10( reg.data$unemp.change + 1 )
+reg.data$p.vacant <- log10( reg.data$vacant.change + 1 )
+reg.data$p.hinc <- log10( reg.data$hinc.change + 1 )
+m1 <- lm( mhv.growth ~  p.hinc, data=reg.data )
+m2 <- lm( mhv.growth ~  p.unemp, data=reg.data )
+m3 <- lm(mhv.growth ~ p.vacant, data = reg.data)
+m4 <- lm( mhv.growth ~  p.hinc + p.unemp + p.vacant, data=reg.data )
+# display model
+stargazer( m1, m2, m3, m4,
+           type="text", #S_TYPE,
+           digits=2,
+           omit.stat = c("rsq","f") )
+```
+
+
+## Group Structure
+
+```{r}
+d5 <- filter( d, cbsaname %in% 
+                c("Tyler, TX",
+                  "Minneapolis-St. Paul-Bloomington, MN-WI",
+                  "San Francisco-San Mateo-Redwood City,CA") )
+d5$cbsaname <- factor( d5$cbsaname, labels=c("MSP-MN","SF-CA","Tyler-TX") )
+par( mar=c(4,6,4,6), mfrow=c(1,2) )
+plot( d5$cbsaname,  d5$mhv.00, las=1, frame.plot=F, outline=F,
+      xlab="", ylab="", main="Home Values in 2000" )
+abline( h=seq(0,1200000,100000), lty=3, col=gray(0.5,0.3) )
+axis( side=4, las=1 )
+plot( d5$cbsaname,  d5$p.unemp, las=1, frame.plot=F, outline=F,
+      xlab="", ylab="", main="Unemployment Rates in 2000" )
+abline( h=seq(0,15,1), lty=3, col=gray(0.5,0.3) )
+axis( side=4, las=1 )
+```
+
+**Vacancy 2000 Metro Level**
+
+```{r}
+d5 <- filter( d, cbsaname %in% 
+                c("Tyler, TX",
+                  "Minneapolis-St. Paul-Bloomington, MN-WI",
+                  "San Francisco-San Mateo-Redwood City,CA") )
+d5$cbsaname <- factor( d5$cbsaname, labels=c("MSP-MN","SF-CA","Tyler-TX") )
+par( mar=c(4,6,4,6), mfrow=c(1,2) )
+plot( d5$cbsaname,  d5$mhv.00, las=1, frame.plot=F, outline=F,
+      xlab="", ylab="", main="Home Values in 2000" )
+abline( h=seq(0,1200000,100000), lty=3, col=gray(0.5,0.3) )
+axis( side=4, las=1 )
+plot( d5$cbsaname,  d5$p.vacant, las=1, frame.plot=F, outline=F,
+      xlab="", ylab="", main="Vacant in 2000" )
+abline( h=seq(0,15,1), lty=3, col=gray(0.5,0.3) )
+axis( side=4, las=1 )
+```
+
+**Household Income Metro Level**
+```{r}
+d5 <- filter( d, cbsaname %in% 
+                c("Tyler, TX",
+                  "Minneapolis-St. Paul-Bloomington, MN-WI",
+                  "San Francisco-San Mateo-Redwood City,CA") )
+d5$cbsaname <- factor( d5$cbsaname, labels=c("MSP-MN","SF-CA","Tyler-TX") )
+par( mar=c(4,6,4,6), mfrow=c(1,2) )
+plot( d5$cbsaname,  d5$mhv.00, las=1, frame.plot=F, outline=F,
+      xlab="", ylab="", main="Home Values in 2000" )
+abline( h=seq(0,1200000,100000), lty=3, col=gray(0.5,0.3) )
+axis( side=4, las=1 )
+plot( d5$cbsaname,  d5$hinc00, las=1, frame.plot=F, outline=F,
+      xlab="", ylab="", main="Household Income in 2000" )
+abline( h=seq(0,15,1), lty=3, col=gray(0.5,0.3) )
+axis( side=4, las=1 )
+```
+
+
+
+
+**Health of City 2000 to 2010 Grouped**
+
+```{r}
+d5 <- filter( d, cbsaname %in%
+                c("Tyler, TX",
+                  "Youngstown-Warren-Boardman, OH-PA",
+                  "Syracuse, NY") )
+d5$mhv.growth[ d5$mhv.growth > 200 ] <- NA
+d5$p.unemp <- log10( d5$p.unemp + 1 )
+x <- rnorm( nrow(d5), 0, 0.1 ) +
+     as.numeric( d5$cbsaname == "Tyler, TX" ) + 
+     2 * as.numeric( d5$cbsaname == "Youngstown-Warren-Boardman, OH-PA" ) + 
+     3* as.numeric( d5$cbsaname == "Syracuse, NY" ) 
+par( mfrow=c(1,2) )
+plot( x, d5$mhv.growth, 
+      pch=19, cex=1.5, bty = "n",  
+        col=factor(d5$cbsa),
+      ylim=c(-50,50),
+      xaxt="n", 
+      ylab="", xlab="",
+      main="MHV Growth")
+axis( side=1, at=1:3, labels=c("Tyler","Youngstown","Syracuse"), 
+      tick=F, col.axis="gray60", cex.axis=1.3 )
+plot( x, d5$p.unemp, 
+      pch=19, cex=1.5, bty = "n",  
+        col=factor(d5$cbsa),
+      # ylim=c(0,40),
+      xaxt="n", 
+      ylab="", xlab="",
+      main="Unemployment (logged)")
+axis( side=1, at=1:3, labels=c("Tyler","Youngstown","Syracuse"), 
+      tick=F, col.axis="gray60", cex.axis=1.3 )
+```
+
+
+
+
+```{r}
+d5 <- filter( d, cbsaname %in%
+                c("Tyler, TX",
+                  "Youngstown-Warren-Boardman, OH-PA",
+                  "Syracuse, NY") )
+d5$mhv.growth[ d5$mhv.growth > 200 ] <- NA
+#d5$p.vacant <- log10( d5$p.vacant + 1 )
+x <- rnorm( nrow(d5), 0, 0.1 ) +
+     as.numeric( d5$cbsaname == "Tyler, TX" ) + 
+     2 * as.numeric( d5$cbsaname == "Youngstown-Warren-Boardman, OH-PA" ) + 
+     3* as.numeric( d5$cbsaname == "Syracuse, NY" ) 
+par( mfrow=c(1,2) )
+plot( x, d5$mhv.growth, 
+      pch=19, cex=1.5, bty = "n",  
+        col=factor(d5$cbsa),
+      ylim=c(-50,50),
+      xaxt="n", 
+      ylab="", xlab="",
+      main="MHV Growth")
+axis( side=1, at=1:3, labels=c("Tyler","Youngstown","Syracuse"), 
+      tick=F, col.axis="gray60", cex.axis=1.3 )
+plot( x, d5$p.vacant, 
+      pch=19, cex=1.5, bty = "n",  
+        col=factor(d5$cbsa),
+      # ylim=c(0,40),
+      xaxt="n", 
+      ylab="", xlab="",
+      main="Vacant")
+axis( side=1, at=1:3, labels=c("Tyler","Youngstown","Syracuse"), 
+      tick=F, col.axis="gray60", cex.axis=1.3 )
+```
+
+
+
+
+
+
+
+**Baseline metro-level home value growth**
+
+```{r}
+m <- lm( mhv.growth ~ factor(cbsaname) + p.unemp - 1, data=d5 )
+b0.syracuse   <- m$coefficients[1] 
+b0.tyler      <- m$coefficients[2] 
+b0.youngston  <- m$coefficients[3] 
+b1            <- m$coefficients[4] 
+palette( c( "steelblue", "green3", "darkorange"  ) )
+palette( adjustcolor( palette(), alpha.f = 0.3 ) )
+plot( d5$p.unemp, d5$mhv.growth,
+        pch=19, cex=1.5, bty = "n",  
+        col=factor(d5$cbsa),
+      ylim=c(-50,50),
+      xlab="Unemployment Rate (logged)",
+      ylab="Median Home Value Growth 2000-2010")
+          
+abline( b0.syracuse, b1, col="steelblue", lwd=3 )
+abline( b0.tyler, b1, col="green3", lwd=3 )
+abline( b0.youngston, b1, col="darkorange", lwd=3 )
+```
+
+
+```{r}
+m <- lm( mhv.growth ~ factor(cbsaname) + p.vacant, data=d5 )
+b0.syracuse   <- m$coefficients[1] 
+b0.tyler      <- m$coefficients[2] 
+b0.youngston  <- m$coefficients[3] 
+b1            <- m$coefficients[4] 
+palette( c( "steelblue", "green3", "darkorange"  ) )
+palette( adjustcolor( palette(), alpha.f = 0.3 ) )
+plot( d5$p.unemp, d5$mhv.growth,
+        pch=19, cex=1.5, bty = "n",  
+        col=factor(d5$cbsa),
+      ylim=c(-50,50),
+      xlab="Vacant",
+      ylab="Median Home Value Growth 2000-2010")
+          
+abline( b0.syracuse, b1, col="steelblue", lwd=3 )
+abline( b0.tyler, b1, col="green3", lwd=3 )
+abline( b0.youngston, b1, col="darkorange", lwd=3 )
+```
+
+
+
+
+
+
+**Adding fixed effect**
+
+```{r}
+d.reg <- d
+d.reg$mhv.growth[ d.reg$mhv.growth > 200 ] <- NA
+d.reg$p.unemp <- log10( d.reg$p.unemp + 1 )
+# average growth in median home value for the city
+d.reg <- 
+  d.reg %>%
+  group_by( cbsaname ) %>%
+  mutate( metro.mhv.growth = 100 * median( mhv.growth, na.rm=T ) ) %>%
+  ungroup() 
+m1 <- lm( mhv.growth ~ unemp.change + vacant.change + hinc.change, data=d.reg )
+m2 <- lm( mhv.growth ~ unemp.change + vacant.change + hinc.change + metro.mhv.growth, data=d.reg )
+m3 <- lm( mhv.growth ~ unemp.change + vacant.change + hinc.change + cbsa, data=d.reg )
+stargazer( m1, m2, m3, 
+           type="text", #S_TYPE,
+           digits=2,
+           omit.stat = c("rsq","f"),
+           omit="cbsa",
+           add.lines = list(c("Metro Fixed Effects:", "NO", "NO","YES")) )
+```
+**What are the results? Which factor was most important? Did it meet your expectations? Were there any variables that were not significant that you expected to be?**
+
+The results were that two of our three variables ended up being indicators of neighborhood change.  Income was the most significant followed by unemployment.  We assumed that a change in vacancy influence the median home value due to less people occupying homes, thereby decrease the average price.  However, vacancy did not have a significant influence on median home value indicating that additional research is needed to determine why vacancy does not have an impact.
+
