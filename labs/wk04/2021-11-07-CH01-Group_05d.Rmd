@@ -647,4 +647,5 @@ stargazer( m1, m2, m3,
 ```
 **What are the results? Which factor was most important? Did it meet your expectations? Were there any variables that were not significant that you expected to be?**
 
-The results were that two of our three variables ended up being pretty good predictors of neighborhood change.  Income was the most important followed by unemployment.  We assumed that increased vacancy would drop the median home value due to less people occupying homes, thereby decrease the average price.  However, vacancy did not have a substantial impact on median home value indicating that we would have to do more research to determine why vacancy does not have an impact.
+The results were that two of our three variables ended up being indicators of neighborhood change.  Income was the most significant followed by unemployment.  We assumed that a change in vacancy influence the median home value due to less people occupying homes, thereby decrease the average price.  However, vacancy did not have a significant influence on median home value indicating that additional research is needed to determine why vacancy does not have an impact.
+
