@@ -1,0 +1,154 @@
+---
+title: "Lab 05 - Predicting MHV Change"
+subtitle: "CPP528 Group 05 Fall 2021"
+author: "Cristian E. Nuno updated by: Amy T. Trumpower, Melissa Millican, Sean Harrington, Joseph Papcznski"
+updated by: "Amy T. Trumpower, Melissa Millican, Sean Harrington, Joseph Papcznski"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  rmdformats::downcute:
+    self_contained: true
+    thumbnails: true
+    lightbox: true
+    gallery: false
+    highlight: tango
+    df_print: paged
+  md_document:
+    variant: gfm
+---
+
+
+```{r}
+#Comments to team members:
+
+# Stargazer table runs, but there are only 29,000 observations - there should be like 100,000 observations
+
+#  We need to interpret results, I put basic language that we can change once we get better results
+
+# Please check my formulas/math - that might be where the problem exists. I think I have too many NA's and we need to adjust that to get more observations!
+```
+
+
+
+
+```{r setup, include=FALSE}
+# define chunk options
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include=FALSE}
+#Load the necessary packages ----
+library(dplyr)
+library(import)
+library(tidyverse)
+library(here)
+library(knitr)
+library(pander)
+library(stargazer)
+library(scales)
+library(rmarkdown)
+library(namespace)
+#set randomization seed ---
+set.seed(1234)
+#Load necessary functions and objects ---
+#note:  all of these are R objects that will be used throughout this .rmd file
+import::here("S_TYPE",
+             "d",
+             "df",
+             "d3",
+             "PLOTS",
+             " %>% ",
+             .from = here::here("~/CPP528/cpp-528-fall-2021-group-05/labs/wk05/lab_05_source.R"),
+             .character_only = TRUE)
+detach("package:import", unload = TRUE)
+```
+
+## Data File
+```{r}
+d <- readRDS(file = "~/CPP528/cpp-528-fall-2021-group-05/data/rodeo/rodeo-data-cs.rds")
+```
+
+**Data Manipuation Information**
+
+- Explain what we did to the data
+
+
+## Variables effect on Neighborhood Improvement
+
+Below is a log-linear diff-in-diff model which compares MHV with the NMTC, and LIHTC programs.  The treatment of the model includes application of either the NMTC or LIHTC programs with the census variables of change in vacancy rates, change in unemployment rates, and change in household income.  The additional variables have all been logged to align with a growth measurement over time related to a growth measurement of Median Home Value over time. 
+
+
+```{r}
+p.vacant.change <- (d$vac12-d$vac00)/d$vac00
+d$vacant.change <- p.vacant.change
+d$vacant.change[d$vacant.change > 80 | d$vacant.change < .000000000000001] <- NA
+
+p.unemp.change <- (d$unemp12-d$unemp00)/d$unemp00
+d$unemp.change <- p.unemp.change
+d$unemp.change[d$unemp.change > 80 | d$unemp.change < .000000000000001] <- NA
+
+p.income.change <- (d$hinc12-d$hinc00)/d$hinc00
+d$income.change <- p.income.change
+d$income.change[d$income.change >80 | d$income.change < 0] <- NA
+
+
+
+y1 <- log( d$mhv.00 )
+y2 <- log( d$mhv.10 )
+
+
+vacant <- log(d$vacant.change)
+unemp <- log(d$unemp.change)
+income <- log(d$income.change)
+
+# create a variable that identifies if a tract received NMTC funding
+treat <- as.numeric( d$num.nmtc > 0 )
+
+#vacant <- log(d$p.vacant)
+#unemp <- log(d$p.unemp)
+
+#change variable name so we don't copy
+treat.lihtc <- as.numeric(d$num.lihtc >0)
+
+# store the year 2000 data
+d1 <- data.frame( y=y1, treat=treat, post=0, vacant, unemp, income)
+# store the year 2010 data
+d2 <- data.frame( y=y2, treat=treat, post=1, vacant, unemp, income)
+
+# stack the two time periods together
+d3 <- rbind( d1, d2 )
+
+
+
+# store the year 2000 data
+e1 <- data.frame( y=y1, treat=treat.lihtc, post=0, vacant, unemp, income)
+# store the year 2010 data
+e2 <- data.frame( y=y2, treat=treat.lihtc, post=1, vacant, unemp, income )
+
+# stack the two time periods together
+e3 <- rbind( e1, e2 )
+```
+
+
+```{r}
+# create the difference in difference model
+# note: treat = B1, post = B2, treat*post = B3
+nmtc <- lm( y ~ treat + post + treat*post + income + vacant + unemp, data=d3 )
+
+lihtc <- lm( y ~ treat + post + treat*post + income + vacant + unemp, data=e3 )
+
+# display model results
+stargazer::stargazer(nmtc, lihtc,
+                     type = "text",
+                     digits = 2, column.labels = c("NMTC", "LIHTC"), covariate.lables = c("intercept (b0)", "treat(b1)", "post(b2)", "Income", "Vacant", "Unemployment", "treat x post (b3)"), intercept.bottom = FALSE)
+```
+
+
+**Interpretation of Results**
+
+Are the programs effective at catalizing neighborhood improvement?
+
+The treatment x post variable (b3) indicates that..... program is [more or less] effective at impacting Median Home Value Growth. When control for the variables of Vacancy Rate, Unemployment Rate, and Household Income, we can see that ...... does [not] represent significant growth in Median Home Value. 
+
+How can we test the parallel lines assumption in this model?
+
+
