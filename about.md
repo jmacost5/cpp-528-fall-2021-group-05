@@ -16,6 +16,7 @@ team:
     website: https://www.aspca.org/adopt-pet/adoptable-dogs-your-local-shelter
     github: https://github.com/cenuno
     twitter: https://twitter.com/cenuno_
+theme: leap-day
 ---
 
 ## Meet the team
