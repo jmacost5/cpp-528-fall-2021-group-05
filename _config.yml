@@ -2,6 +2,8 @@ title: "CPP 528 Template Website"
 author: "Blog Author"
 description: "This is short description of the CPP 528 Template Website"
 
+remote_theme: pages-themes/leap-day@v0.2.0
+
 # Jekyll settings
 permalink: /:title/          # see https://jekyllrb.com/docs/permalinks/
 paginate: 2                  # number of articles per page, remove to disable pagination
@@ -38,6 +40,6 @@ plugins:
  - jekyll-paginate
  - jekyll-default-layout
 
-remote_theme: pages-themes/leap-day@v0.2.0
+
 
 theme: jekyll-theme-leap-day
