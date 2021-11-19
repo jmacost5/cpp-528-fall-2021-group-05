@@ -2,7 +2,7 @@ title: "CPP 528 Group 5 Final Project"
 author: "Amy T. Trumpower, Melissa Millican, Sean Harrington, Joseph Papcznskir"
 description: "An Examination of Federal Tax Programs on Median Home Value"
 
-remote_theme: pages-themes/leap-day@v0.2.0
+remote_theme: pages-themes/modernist
 
 # Jekyll settings
 permalink: /:title/          # see https://jekyllrb.com/docs/permalinks/
@@ -18,9 +18,7 @@ minimal_theme: true          # radically minimalistic theme
 
 navigation:                  # show navigation links in the header	
   - index.html
-  - exsummary.md
-  - about.md
-  
+ 
 
 
 icons:                       # show icons in the header, for all possible icons see http://fontawesome.io/icons/
@@ -32,7 +30,7 @@ comments:                    # embed disqus or isso comments
 #  disqus: "disqus-contrast"
 #  isso: "comments.mysite.org"
 
-remote_theme: niklasbuschmann/contrast
+
 
 plugins: 
  - jekyll-remote-theme
