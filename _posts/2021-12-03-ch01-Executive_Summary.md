@@ -10,7 +10,7 @@ Today’s date is December 3, 2021.
 
 ## Overview & Research Question
 
-The research question presented was if two federal tax programs motivated positive growth to revitalize neighborhoods between the years of 2000-2010.  The two programs analyzed were: Low Income Housing Tax Credits (LIHTC) and New Market Tax Credits (NMTC).
+The research question presented was if two federal tax programs motivated positive growth to revitalize neighborhoods between the years of 2000-2010.  The two programs analyzed were: [Low Income Housing Tax Credits (LIHTC)](https://www.huduser.gov/portal/datasets/lihtc.html) and [New Market Tax Credits (NMTC)](https://www.cdfifund.gov/programs-training/programs/new-markets-tax-credit).
 
 This paper leverages census data to determine the neighborhood change in three cities - using median home value as the dependent variable.  Researchers then combined three census variables (vacancy rates, change in unemployment rates, and change in household income) to develop an indicator of increased gentrification within the same neighborhoods.  The purpose of the gentrification variables is to contextualize rises in median home value to avoid the pitfalls of hedonic housing models.  Leveraging these two indicators, researchers conducted an analysis of three cities to determine if positive growth occurred as a result of these tax progra
 
@@ -34,11 +34,11 @@ The goal of both of these programs was to help distressed communities by providi
 
 ### Raw Census Data
 
-The [American Community Survey (ACS)](https://www.census.gov/programs-surveys/acs) and the Current Population Survey (CPS) are ongoing sample surveys of the population that collect detailed demographic and socioeconomic characteristics. Sample surveys collect information from just a small subset of the population, either randomly or from targeted groups, which is used to estimate what the total population is. The size of the sample is carefully determined, so that the sample data can be used to estimate the total population for a given geographic area with a reasonable level of precision. The ACS is a large survey that is published annually for large and small geographic areas, while the CPS is a smaller survey that is published monthly and is summarized for the nation as a whole or for the states.
+The [American Community Survey (ACS)](https://www.census.gov/programs-surveys/acs) and the [Current Population Survey (CPS)](https://www.census.gov/programs-surveys/cps.html) are ongoing sample surveys of the population that collect detailed demographic and socioeconomic characteristics. Sample surveys collect information from just a small subset of the population, either randomly or from targeted groups, which is used to estimate what the total population is. The size of the sample is carefully determined, so that the sample data can be used to estimate the total population for a given geographic area with a reasonable level of precision. The ACS is a large survey that is published annually for large and small geographic areas, while the CPS is a smaller survey that is published monthly and is summarized for the nation as a whole or for the states.
 
 ### LTDB Codebook
 
-The Longitudinal Tract Database (LTDB) allows one to normalize census tract data from previous years (1970-2000) to 2010 census tract boundaries. The LTDB includes both a selection of short-(Full Count) and long-form (Sample Count) items from 1970-2000, as well as a utility which allows you to input any census-tract based item and normalize the boundaries to 2010 boundaries.  For each Census year (1970-2010), normalized Full Count and Sample Count data from S4 at Brown University were joined to the 2010 tract boundary file.  New File Geodatabase Feature Classes were created for each join, resulting in a series of normalized datasets.
+The [Longitudinal Tract Database (LTDB)](https://www.psc.isr.umich.edu/dis/data/resource/detail/1612.html) allows one to normalize census tract data from previous years (1970-2000) to 2010 census tract boundaries. The LTDB includes both a selection of short-(Full Count) and long-form (Sample Count) items from 1970-2000, as well as a utility which allows you to input any census-tract based item and normalize the boundaries to 2010 boundaries.  For each Census year (1970-2010), normalized Full Count and Sample Count data from S4 at Brown University were joined to the 2010 tract boundary file.  New File Geodatabase Feature Classes were created for each join, resulting in a series of normalized datasets.
 
 ## Methods
 
