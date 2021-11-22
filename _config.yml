@@ -38,3 +38,5 @@ plugins:
  - jekyll-default-layout
 remote_theme: pages-themes/modernist
 
+
+theme: jekyll-theme-modernist
