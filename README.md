@@ -15,13 +15,6 @@ The [about page](about.md) is a markdown file that relies on a data stored withi
 title: About
 subtitle: The Coding Geniuses Behind this Project
 team:
-  - name: Amy Trumpower
-    img: ../assets/img/about/romi_and_phoebe.jpg
-    desc: Two excellent rescue hounds who bring much joy to our family.
-    url: https://www.aspca.org/adopt-pet/adoptable-dogs-your-local-shelter
-    website: https://www.aspca.org/adopt-pet/adoptable-dogs-your-local-shelter
-    github: https://github.com/cenuno
-    twitter: https://twitter.com/cenuno_
   - name: Sean Harrington
     img: ../assets/img/about/romi_and_phoebe.jpg
     desc: Two excellent rescue hounds who bring much joy to our family.
@@ -37,6 +30,13 @@ team:
     github: https://github.com/cenuno
     twitter: https://twitter.com/cenuno_
   - name: Joseph Papczynski
+    img: ../assets/img/about/romi_and_phoebe.jpg
+    desc: Two excellent rescue hounds who bring much joy to our family.
+    url: https://www.aspca.org/adopt-pet/adoptable-dogs-your-local-shelter
+    website: https://www.aspca.org/adopt-pet/adoptable-dogs-your-local-shelter
+    github: https://github.com/cenuno
+    twitter: https://twitter.com/cenuno_
+  - name: Amy Trumpower
     img: ../assets/img/about/romi_and_phoebe.jpg
     desc: Two excellent rescue hounds who bring much joy to our family.
     url: https://www.aspca.org/adopt-pet/adoptable-dogs-your-local-shelter
