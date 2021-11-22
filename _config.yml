@@ -39,4 +39,4 @@ plugins:
 remote_theme: pages-themes/modernist
 
 
-theme: jekyll-theme-minimal
+#theme: jekyll-theme-minimal
