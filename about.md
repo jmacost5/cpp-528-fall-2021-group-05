@@ -3,12 +3,13 @@ title: About
 subtitle: The humans behind this project
 team:
   - name: Sean Harrington
-    img: ../assets/img/about/romi_and_phoebe.jpg
+    img: ../assets/img/about/SEAN (C) small.jpg
+    #assets/img/about/romi_and_phoebe.jpg
     desc: Two excellent rescue hounds who bring much joy to our family.
     url: https://www.aspca.org/adopt-pet/adoptable-dogs-your-local-shelter
-    website: https://www.aspca.org/adopt-pet/adoptable-dogs-your-local-shelter
-    github: https://github.com/cenuno
-    twitter: https://twitter.com/cenuno_
+    website: https://isearch.asu.edu/node/347427
+    github: https://github.com/Sean-In-The-Library
+    twitter: https://twitter.com/SeanLovesBooks
   - name: Nelli and Fermi
     img: ../assets/img/about/nelli_and_fermi.jpg
     desc: Two incredible rescue dogs who bring much joy to our family.
