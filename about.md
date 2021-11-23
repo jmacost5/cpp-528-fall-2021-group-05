@@ -5,7 +5,7 @@ team:
   - name: Sean Harrington
     img: ../assets/img/about/SEAN (C) small.jpg
     #assets/img/about/romi_and_phoebe.jpg
-    desc: Two excellent rescue hounds who bring much joy to our family.
+    desc: Lover of books and friend of dogs.
     url: https://www.aspca.org/adopt-pet/adoptable-dogs-your-local-shelter
     website: https://isearch.asu.edu/node/347427
     github: https://github.com/Sean-In-The-Library
