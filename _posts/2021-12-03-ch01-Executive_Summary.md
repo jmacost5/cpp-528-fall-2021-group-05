@@ -1,7 +1,6 @@
 ---
 title: Executive Summary
-subtitle: An Overview of the Project
-However, the file name must be in this specific format: `YYYY-MM-DD-chXX-short_name.md`."
+subtitle: "Executive Summary"
 ---
 
 # Executive Summary
