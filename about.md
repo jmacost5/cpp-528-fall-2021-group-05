@@ -2,7 +2,7 @@
 title: About
 subtitle: The humans behind this project
 team:
-  - name: Romi and Phoebe
+  - name: Sean Harrington
     img: ../assets/img/about/romi_and_phoebe.jpg
     desc: Two excellent rescue hounds who bring much joy to our family.
     url: https://www.aspca.org/adopt-pet/adoptable-dogs-your-local-shelter
