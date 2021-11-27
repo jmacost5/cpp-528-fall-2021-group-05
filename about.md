@@ -18,7 +18,7 @@ team:
     github: https://github.com/cenuno
     twitter: https://twitter.com/cenuno_
   - name: Joseph Papczynski
-    img: ../assets/img/about/Joe.jpg
+    img: ../assets/img/about/Joe.JPG
     desc: Not a great programmer but gets the job done. I enjoy being outdoors fishing, playing sports, or just enjoying the sunshine.
     github: https://github.com/jpapczyn
 theme: leap-day
