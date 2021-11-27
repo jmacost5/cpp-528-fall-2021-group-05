@@ -17,6 +17,10 @@ team:
     website: https://www.aspca.org/adopt-pet/adoptable-dogs-your-local-shelter
     github: https://github.com/cenuno
     twitter: https://twitter.com/cenuno_
+  - name: Joseph Papczynski
+    img: ../assets/img/about/Joe.jpg
+    desc: Not a great programmer but gets the job done. I enjoy being outdoors fishing, playing sports, or just enjoying the sunshine.
+    github: https://github.com/jpapczyn
 theme: leap-day
 ---
 
