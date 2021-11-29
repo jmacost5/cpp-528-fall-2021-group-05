@@ -22,7 +22,7 @@ team:
     desc: Not a great programmer but gets the job done. I enjoy being outdoors fishing, playing sports, or just enjoying the sunshine.
     github: https://github.com/jpapczyn
   - name: Amy T. Trumpower
-    img: ../assets/img/about/amy.JPG
+    img: ../assets/img/about/amy.jpg
     desc: Loves National Parks, true crime podcasts, and her four-legged kids.
     github: https://github.com/amytrumpower
     email: attrumpo@asu.edu
