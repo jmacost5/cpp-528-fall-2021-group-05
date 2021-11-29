@@ -25,8 +25,7 @@ team:
     img: ../assets/img/about/amy.jpg
     desc: Loves National Parks, true crime podcasts, and her four-legged kids.
     github: https://github.com/amytrumpower
-    envelope: "mailto:attrumpo@asu.edu"
-    
+    envelope: "mailto:attrumpo@asu.edu"   
 theme: leap-day
 ---
 
