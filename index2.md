@@ -1,6 +1,6 @@
 ---
-layout: Executive Summary
-title: "Executive Summary"
+layout: default
+title: Executive Summary
 
 ---
 
