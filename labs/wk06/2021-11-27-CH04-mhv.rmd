@@ -1,5 +1,5 @@
 ---
-title: "Lab 05 - Predicting MHV Change"
+title: "Predicting MHV Change"
 subtitle: "CPP528 Group 05 Fall 2021"
 author: "Cristian E. Nuno updated by: Amy T. Trumpower, Melissa Millican, Sean Harrington, Joseph Papcznski"
 updated by: "Amy T. Trumpower, Melissa Millican, Sean Harrington, Joseph Papczynski"
