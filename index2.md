@@ -1,6 +1,6 @@
 ---
 layout: home
-title: Executive Summary
+title: "Executive Summary"
 
 ---
 
