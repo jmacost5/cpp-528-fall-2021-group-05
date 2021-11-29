@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: Executive Summary
 title: "Executive Summary"
 
 ---
