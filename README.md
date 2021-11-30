@@ -2,6 +2,10 @@
 
 An analysis of the effect of two tax policies on distressed housing markets.
 
+## License
+
+This project is licensed under the terms of the  GNU General Public License v3.0
+
 ## Context
 
 The [`index.html`](index.html) file serves a purpose which is to ensure that the `README.md` file does not get displayed back to the user on the home page of the website.
@@ -63,4 +67,6 @@ brew install ruby@2.7
 ```bash
 sudo gem install jekyll bundler
 ```
+## License
 
+This project is licensed under the terms of the  GNU General Public License v3.0
