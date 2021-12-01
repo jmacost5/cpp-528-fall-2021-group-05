@@ -10,7 +10,7 @@ The data used in the test was derived from the LTDB-2000, LTDB-2010, and
 LTDB-META-DATA datasets that can be found at
 <https://github.com/R-Class/cpp-528-fall-2021-group-05/tree/main/data/rodeo>.
 Code for the data manipulation steps can be found at
-<https://github.com/R-Class/cpp-528-fall-2021-group-05/labs/wk05lab_05_source-1.R>
+<https://github.com/R-Class/cpp-528-fall-2021-group-05/labs/wk05/lab_05_source.R>
 
 -   Step 1: The data was wrangled from the three separate data sources
     and was merged into a singular data frame to allow for easy data
@@ -205,16 +205,16 @@ stargazer::stargazer(nmtc, lihtc,
 
 **Interpretation of Results**
 
-Are the programs effective at catalizing neighborhood improvement?
+**Are the programs effective at catalizing neighborhood improvement?**
 
 The treatment x post variable (b3) indicates that the NMTC program is
-more or effective at impacting Median Home Value Growth. When control
+effective at impacting Median Home Value Growth. When control
 for the variables of Vacancy Rate, Unemployment Rate, and Household
-Income, we can see that appling the NMTC (treatment) does represent 9%
+Income, we can see that appling the NMTC (treatment) represents 9%
 significant growth in Median Home Value compared to the 1% decrease
 after application of the LIHTC program.
 
-How can we test the parallel lines assumption in this model?
+**How can we test the parallel lines assumption in this model?**
 
 So I am not exactly sure how to test for this, but looking at the
 coefficients across both models it looks like on vacancy and
