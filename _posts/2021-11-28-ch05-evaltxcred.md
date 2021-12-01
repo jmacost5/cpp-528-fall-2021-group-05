@@ -10,7 +10,7 @@ The data used in the test was derived from the LTDB-2000, LTDB-2010, and
 LTDB-META-DATA datasets that can be found at
 <https://github.com/R-Class/cpp-528-fall-2021-group-05/tree/main/data/rodeo>.
 Code for the data manipulation steps can be found at
-<https://github.com/R-Class/cpp-528-fall-2021-group-05/labs/wk05/lab_05_source.R>
+<https://github.com/R-Class/cpp-528-fall-2021-group-05/blob/main/labs/wk05/lab_05_source.R>
 
 -   Step 1: The data was wrangled from the three separate data sources
     and was merged into a singular data frame to allow for easy data
