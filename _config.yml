@@ -17,7 +17,7 @@ minimal_theme: true          # radically minimalistic theme
 
 navigation:                  # show navigation links in the header	
   - index.html
-  - ch01-execsum.md
+  - https://r-class.github.io/cpp-528-fall-2021-group-05/ch01-execsum/
   - about.md
 
 
