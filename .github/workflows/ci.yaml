@@ -13,6 +13,6 @@ jobs:
           ruby-version: 2.7
           bundler-cache: true
       - name: build
-        run: sh script/bootstrap
+        run: script/bootstrap
       - name: test
-        run: sh script/cibuild
+        run: script/cibuild
