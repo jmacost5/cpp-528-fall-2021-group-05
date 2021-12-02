@@ -13,10 +13,7 @@ team:
   - name: Melissa Millican
     img: ../assets/img/about/Melissa.jpg
     desc: Enjoys the outdoors, reading, and tennis
-    url: https://github.com/millmeli42
-    website: https://www.aspca.org/adopt-pet/adoptable-dogs-your-local-shelter
-    github: https://github.com/cenuno
-    twitter: https://twitter.com/cenuno_
+    github:  https://github.com/millmeli42
   - name: Joseph Papczynski
     img: ../assets/img/about/Joe.JPG
     desc: Not a great programmer but gets the job done. I enjoy being outdoors fishing, playing sports, or just enjoying the sunshine.
