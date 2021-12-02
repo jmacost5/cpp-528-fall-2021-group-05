@@ -10,10 +10,10 @@ team:
     website: https://isearch.asu.edu/node/347427
     github: https://github.com/Sean-In-The-Library
     twitter: https://twitter.com/SeanLovesBooks
-  - name: Nelli and Fermi
-    img: ../assets/img/about/nelli_and_fermi.jpg
-    desc: Two incredible rescue dogs who bring much joy to our family.
-    url: https://www.aspca.org/adopt-pet/adoptable-dogs-your-local-shelter
+  - name: Melissa Millican
+    img: ../assets/img/about/Melissa.jpg
+    desc: Enjoys the outdoors, reading, and tennis
+    url: https://github.com/millmeli42
     website: https://www.aspca.org/adopt-pet/adoptable-dogs-your-local-shelter
     github: https://github.com/cenuno
     twitter: https://twitter.com/cenuno_
