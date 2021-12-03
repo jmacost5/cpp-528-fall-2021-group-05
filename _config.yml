@@ -20,12 +20,12 @@ navigation:                  # show navigation links in the header
   - index.html
   - https://r-class.github.io/cpp-528-fall-2021-group-05/ch01-execsum/
   - about.md
-  - https://github.com/R-Class/cpp-528-fall-2021-group-05/blob/main/LICENSE
   - license.md
-  -  github: "https://github.com/R-Class/cpp-528-fall-2021-group-05/tree/main"
+  - "GitHub" "https://github.com/R-Class/cpp-528-fall-2021-group-05/tree/main"
 
-icons:                       # show icons in the header, for all possible icons see http://fontawesome.io/icons/
-  # envelope: "mailto:niklasbuschmann@users.noreply.github.com"
+icons:                       
+# show icons in the header, for all possible icons see http://fontawesome.io/icons/
+# envelope: "mailto:niklasbuschmann@users.noreply.github.com"
  
   
  
