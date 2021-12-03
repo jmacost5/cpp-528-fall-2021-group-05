@@ -1,6 +1,6 @@
 ---
 title: About
-subtitle: The humans behind this project
+subtitle: The team behind this project
 team:
   - name: Sean Harrington
     img: ../assets/img/about/SEAN (C) small.jpg
@@ -12,7 +12,7 @@ team:
     twitter: https://twitter.com/SeanLovesBooks
   - name: Melissa Millican
     img: ../assets/img/about/Melissa.jpg
-    desc: Enjoys the outdoors, reading, and tennis
+    desc: Enjoys the outdoors, reading, and tennis.
     github:  https://github.com/millmeli42
   - name: Joseph Papczynski
     img: ../assets/img/about/Joe.JPG
@@ -22,6 +22,7 @@ team:
     img: ../assets/img/about/amy.jpg
     desc: Loves National Parks, true crime podcasts, and her four-legged kids.
     github: https://github.com/amytrumpower
+    envelope: "mailto:attrumpo@asu.edu"
    
 theme: leap-day
 ---
