@@ -61,7 +61,7 @@ You can find the source code that powers this website [on this GitHub repo](http
 
 /* make the background a bit brighter than the current dark gray (#282828) */
 .list-circles-item:hover {
-  background: #5e5e5e;
+  background: #DFDFDF;
 }
 
 .list-circles-item .item-img {
@@ -88,7 +88,7 @@ You can find the source code that powers this website [on this GitHub repo](http
 }
 
 .list-circles-item .item-link:hover {
-  color: #000000;
+  color: #5E5E5E;
 }
 
 </style>
