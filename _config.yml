@@ -19,7 +19,7 @@ navigation:                  # show navigation links in the header
   - index.html
   - https://r-class.github.io/cpp-528-fall-2021-group-05/ch01-execsum/
   - about.md
-  - index3.md
+ 
 
 
 icons:                       # show icons in the header, for all possible icons see http://fontawesome.io/icons/
