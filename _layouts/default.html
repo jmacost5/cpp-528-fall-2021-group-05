@@ -27,12 +27,9 @@ href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
 <header>
   {% unless site.hide_title %}<h1><a href="{{ "/" | relative_url }}">{{ site.title | escape }}</a></h1>{% endunless %}
   {% if site.navigation %}<nav>{% for path in site.navigation %}{% assign node = site.pages | where: "name", path | first %}<a href="{{ node.url | relative_url }}">{{ node.title }}</a>{% endfor %}</nav>{% endif %}
-  {% if site.github.is_project_page %}
-        <p class="view"><a href="{{ site.github.repository_url }}">View the Project on GitHub <small>{{ site.github.repository_nwo }}</small></a></p>
-        {% endif %}
-  
+    
   <nav>    
-  {% if site.icons %}{% for link in site.icons %}<a class="icon" style="font-size: 1.7em;" href="{{ link[1] }}{{page.path}}" target="_blank"><svg><use xlink:href="{{ "/assets/fontawesome/icons.svg" | relative_url }}#{{ link[0] }}"></use></svg></a>{% endfor %}{% endif %}
+  {% if site.icons %}{% for link in site.icons %}<a class="icon" style="font-size: 1.7em;" href="{{ link[1] }}" target="_blank"><svg><use xlink:href="{{ "/assets/fontawesome/icons.svg" | relative_url }}#{{ link[0] }}"></use></svg></a>{% endfor %}{% endif %}
     
     
   </nav> 
