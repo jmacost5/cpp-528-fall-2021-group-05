@@ -216,11 +216,9 @@ after application of the LIHTC program.
 
 **How can we test the parallel lines assumption in this model?**
 
-So I am not exactly sure how to test for this, but looking at the
-coefficients across both models it looks like on vacancy and
+Using the fixed model effect the coefficients across both models it looks like on vacancy and
 unemployment they stay the same which would not violate the parallel
-lines assumption (Harrell, 2015). However there is a small change in
-income, which may violate the parallel lines assumption?
+lines assumption (Harrell, 2015). 
 
 Reference Harrell, F. E. (2015). Regression modeling strategies: With
 applications to linear models, logistic and ordinal regression, and
