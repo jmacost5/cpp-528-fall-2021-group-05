@@ -146,7 +146,7 @@ df$Unemp.growth[df$Unemp.growth > 80 | df$Unemp.growth < 1] <- NA
 #Correlation check
 measurement.1 <- select(df, Vacant2000, Income2000, Unemp2000, MedianHomeValue2000) %>% na.omit ()
 ```
-
+![Caption](https://r-class.github.io/cpp-528-fall-2021-group-05/assets/images/octocat-logo.svg)
 
 ```{r}
 set.seed(1234)
