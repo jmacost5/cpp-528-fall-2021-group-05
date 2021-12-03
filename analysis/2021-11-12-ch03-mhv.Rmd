@@ -148,6 +148,8 @@ measurement.1 <- select(df, Vacant2000, Income2000, Unemp2000, MedianHomeValue20
 ```
 ![Caption](https://r-class.github.io/cpp-528-fall-2021-group-05/assets/images/octocat-logo.svg)
 
+![](https://r-class.github.io/cpp-528-fall-2021-group-05/assets/img/2021-11-07-CH03-mhv_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
 ```{r}
 set.seed(1234)
 
