@@ -83,7 +83,7 @@ You can find the source code that powers this website [on this GitHub repo](http
 
 .list-circles-item .item-link {
   margin:0 3px;
-  color: #FFFFFF;
+  color: #00000;
   text-decoration: none !important;
 }
 
