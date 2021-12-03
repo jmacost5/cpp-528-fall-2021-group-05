@@ -40,7 +40,7 @@ library(rmarkdown)
 library(namespace)
 ```
 
-
+![Please use the following link if images are not displaying correctly](https://r-class.github.io/cpp-528-fall-2021-group-05/_posts/Lab-06-Group-05_Millicanlab4.html)
 
 ```{r include=FALSE}
 
