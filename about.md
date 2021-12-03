@@ -24,7 +24,7 @@ team:
     github: https://github.com/amytrumpower
     envelope: "mailto:attrumpo@asu.edu"
    
-theme: leap-day
+theme: minimal
 ---
 
 ## Meet the team
@@ -39,7 +39,7 @@ The Jekyll website design was adapted from Niklas Buschmann's [contrast theme](h
 
 ## GitHub Repo
 
-You can find the source code that powers this website [on this GitHub repo](https://github.com/R-Class/cpp-528-template).
+You can find the source code that powers this website [on this GitHub repo](https://github.com/R-Class/cpp-528-fall-2021-group-05).
 
 <!--- CSS for Circles --->
 
