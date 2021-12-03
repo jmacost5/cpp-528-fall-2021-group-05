@@ -22,11 +22,11 @@ navigation:                  # show navigation links in the header
   - about.md
   - https://github.com/R-Class/cpp-528-fall-2021-group-05/blob/main/LICENSE
   - license.md
- 
+  -  github: "https://github.com/R-Class/cpp-528-fall-2021-group-05/tree/main"
 
 icons:                       # show icons in the header, for all possible icons see http://fontawesome.io/icons/
   # envelope: "mailto:niklasbuschmann@users.noreply.github.com"
-  github: "https://github.com/R-Class/cpp-528-fall-2021-group-05/tree/main"
+ 
   
  
   
