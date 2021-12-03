@@ -34,7 +34,7 @@ comments:                    # embed disqus or isso comments
 #  disqus: "disqus-contrast"
 #  isso: "comments.mysite.org"
 
-remote_theme: niklasbuschmann/contrast
+
 
 plugins: 
  - jekyll-remote-theme
@@ -44,4 +44,4 @@ plugins:
 
 remote_theme: pages-themes/minimal@v0.2.0
 
-theme: jekyll-theme-modernist
+
